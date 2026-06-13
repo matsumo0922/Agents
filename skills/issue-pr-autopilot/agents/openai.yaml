@@ -1,0 +1,4 @@
+interface:
+  display_name: "Issue PR Autopilot"
+  short_description: "Issue から PR 作成とレビュー反復まで自走する"
+  default_prompt: "Use $issue-pr-autopilot to implement an issue in a sibling worktree, open a PR, and run the review loop."
