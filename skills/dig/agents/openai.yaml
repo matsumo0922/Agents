@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dig"
+  short_description: "プランの前提を疑い、リスクと未決定事項を掘り起こす"
+  default_prompt: "Use $dig to stress-test the current plan: map hidden assumptions, run structured question rounds, and record decisions."

@@ -10,6 +10,10 @@ skills/
     SKILL.md
     README.md
     prompt-template.md
+  dig/
+    SKILL.md
+    README.md
+    agents/openai.yaml
   issue-pr-autopilot/
     SKILL.md
     README.md
@@ -56,4 +60,5 @@ make unlink
 ## 管理中のスキル
 
 - [codex-orchestrator](skills/codex-orchestrator/README.md): Codex CLI の `/goal` 指示ファイルを生成し、複数作業をサブエージェントへ委任するためのスキル。
+- [dig](skills/dig/README.md): プランの暗黙の前提と未検討リスクを、構造化質問の反復インタビューで掘り起こすためのスキル。
 - [issue-pr-autopilot](skills/issue-pr-autopilot/README.md): issue や作業説明を起点に、worktree 実装、PR 作成、レビュー反復まで自走させるためのスキル。
