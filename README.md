@@ -18,6 +18,11 @@ skills/
     SKILL.md
     README.md
     agents/openai.yaml
+  fukurou-llm-daemon-log-audit/
+    SKILL.md
+    README.md
+    agents/openai.yaml
+    scripts/query-fukurou-llm-daemon-log.sh
 scripts/
   link-skills.sh
 Makefile
@@ -61,4 +66,5 @@ make unlink
 
 - [codex-orchestrator](skills/codex-orchestrator/README.md): Codex CLI の `/goal` 指示ファイルを生成し、複数作業をサブエージェントへ委任するためのスキル。
 - [dig](skills/dig/README.md): プランの暗黙の前提と未検討リスクを、構造化質問の反復インタビューで掘り起こすためのスキル。
+- [fukurou-llm-daemon-log-audit](skills/fukurou-llm-daemon-log-audit/README.md): fukurou production の LLM daemon と paper trading 状態を read-only で時系列確認するためのスキル。
 - [issue-pr-autopilot](skills/issue-pr-autopilot/README.md): issue や作業説明を起点に、worktree 実装、PR 作成、レビュー反復まで自走させるためのスキル。
