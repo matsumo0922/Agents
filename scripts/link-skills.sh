@@ -5,7 +5,7 @@ ACTION="${1:-link}"
 TARGETS="${TARGETS:-claude codex}"
 REPO_ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 SKILLS_ROOT="$REPO_ROOT/skills"
-BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.skills-repo-backups}"
+BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.agents-repo-backups}"
 TIMESTAMP="$(date +%Y%m%d%H%M%S)"
 
 usage() {
