@@ -5,7 +5,7 @@ ACTION="${1:-link}"
 TARGETS="${TARGETS:-claude codex}"
 REPO_ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 SKILLS_ROOT="$REPO_ROOT/skills"
-BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.skills-repo-backups}"
+BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.agents-repo-backups}"
 TIMESTAMP="$(date +%Y%m%d%H%M%S)"
 
 usage() {
@@ -20,6 +20,19 @@ Environment:
   BACKUP_ROOT=PATH         Backup directory for existing entries.
 EOF
 }
+
+case "$ACTION" in
+  link|unlink|status)
+    ;;
+  help|-h|--help)
+    usage
+    exit 0
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac
 
 target_dir() {
   agent_name="$1"
@@ -131,14 +144,6 @@ run_for_skill() {
       ;;
     status)
       status_skill "$agent_name" "$skill_path"
-      ;;
-    help|-h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      usage >&2
-      exit 1
       ;;
   esac
 }
