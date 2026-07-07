@@ -21,6 +21,19 @@ Environment:
 EOF
 }
 
+case "$ACTION" in
+  link|unlink|status)
+    ;;
+  help|-h|--help)
+    usage
+    exit 0
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac
+
 target_dir() {
   agent_name="$1"
 
@@ -131,14 +144,6 @@ run_for_skill() {
       ;;
     status)
       status_skill "$agent_name" "$skill_path"
-      ;;
-    help|-h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      usage >&2
-      exit 1
       ;;
   esac
 }

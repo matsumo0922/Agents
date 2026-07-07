@@ -21,6 +21,19 @@ Environment:
 EOF
 }
 
+case "$ACTION" in
+  link|unlink|status)
+    ;;
+  help|-h|--help)
+    usage
+    exit 0
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac
+
 backup_existing_entry() {
   agent_name="$1"
   rule_name="$2"
@@ -30,6 +43,119 @@ backup_existing_entry() {
   mkdir -p "$(dirname -- "$backup_path")"
   mv "$destination_path" "$backup_path"
   printf 'backup %s -> %s\n' "$destination_path" "$backup_path"
+}
+
+claude_wrapper_content() {
+  printf '@%s\n' "$RULES_ROOT/AGENTS.md"
+  printf '@RTK.md\n'
+}
+
+is_expected_claude_wrapper() {
+  destination_path="$1"
+
+  if [ ! -f "$destination_path" ] || [ -L "$destination_path" ]; then
+    return 1
+  fi
+
+  current_content="$(cat "$destination_path")"
+  expected_content="$(claude_wrapper_content)"
+
+  [ "$current_content" = "$expected_content" ]
+}
+
+link_claude_wrapper() {
+  destination_path="$HOME/.claude/CLAUDE.md"
+
+  if [ ! -f "$RULES_ROOT/AGENTS.md" ]; then
+    printf 'missing source claude/CLAUDE.md: %s\n' "$RULES_ROOT/AGENTS.md" >&2
+    exit 1
+  fi
+
+  mkdir -p "$(dirname -- "$destination_path")"
+
+  if is_expected_claude_wrapper "$destination_path"; then
+    printf 'ok claude/CLAUDE.md -> generated wrapper\n'
+    return
+  fi
+
+  if [ -L "$destination_path" ] || [ -e "$destination_path" ]; then
+    backup_existing_entry claude CLAUDE.md "$destination_path"
+  fi
+
+  claude_wrapper_content > "$destination_path"
+  printf 'generated claude/CLAUDE.md -> %s\n' "$RULES_ROOT/AGENTS.md"
+}
+
+unlink_claude_wrapper() {
+  destination_path="$HOME/.claude/CLAUDE.md"
+
+  if is_expected_claude_wrapper "$destination_path"; then
+    rm "$destination_path"
+    printf 'unlinked claude/CLAUDE.md\n'
+    return
+  fi
+
+  if [ -L "$destination_path" ]; then
+    current_target="$(readlink "$destination_path")"
+
+    if [ "$current_target" = "$RULES_ROOT/CLAUDE.md" ]; then
+      rm "$destination_path"
+      printf 'unlinked claude/CLAUDE.md\n'
+      return
+    fi
+
+    printf 'skip claude/CLAUDE.md: points to %s\n' "$current_target"
+    return
+  fi
+
+  if [ -e "$destination_path" ]; then
+    printf 'skip claude/CLAUDE.md: real entry at %s\n' "$destination_path"
+  else
+    printf 'skip claude/CLAUDE.md: missing\n'
+  fi
+}
+
+status_claude_wrapper() {
+  destination_path="$HOME/.claude/CLAUDE.md"
+
+  if is_expected_claude_wrapper "$destination_path"; then
+    printf 'generated claude/CLAUDE.md -> %s\n' "$RULES_ROOT/AGENTS.md"
+  elif [ -L "$destination_path" ]; then
+    current_target="$(readlink "$destination_path")"
+    printf 'different claude/CLAUDE.md -> %s\n' "$current_target"
+  elif [ -e "$destination_path" ]; then
+    printf 'existing claude/CLAUDE.md: real entry at %s\n' "$destination_path"
+  else
+    printf 'missing claude/CLAUDE.md\n'
+  fi
+}
+
+status_claude_agents_placeholder() {
+  destination_path="$HOME/.claude/AGENTS.md"
+
+  if [ -L "$destination_path" ]; then
+    current_target="$(readlink "$destination_path")"
+    printf 'unmanaged claude/AGENTS.md -> %s\n' "$current_target"
+  elif [ -e "$destination_path" ]; then
+    printf 'unmanaged claude/AGENTS.md: real entry at %s\n' "$destination_path"
+  else
+    printf 'missing claude/AGENTS.md (not managed)\n'
+  fi
+}
+
+cleanup_managed_claude_agents_link() {
+  destination_path="$HOME/.claude/AGENTS.md"
+
+  if [ ! -L "$destination_path" ]; then
+    return
+  fi
+
+  current_target="$(readlink "$destination_path")"
+
+  if [ "$current_target" = "$RULES_ROOT/AGENTS.md" ]; then
+    rm "$destination_path"
+    printf 'removed claude/AGENTS.md managed link\n'
+  fi
 }
 
 link_rule() {
@@ -120,14 +246,6 @@ run_for_rule() {
     status)
       status_rule "$agent_name" "$source_path" "$destination_path"
       ;;
-    help|-h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      usage >&2
-      exit 1
-      ;;
   esac
 }
 
@@ -136,8 +254,20 @@ run_for_agent() {
 
   case "$agent_name" in
     claude)
-      run_for_rule "$agent_name" "$RULES_ROOT/AGENTS.md" "$HOME/.claude/AGENTS.md"
-      run_for_rule "$agent_name" "$RULES_ROOT/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+      case "$ACTION" in
+        link)
+          cleanup_managed_claude_agents_link
+          link_claude_wrapper
+          ;;
+        unlink)
+          cleanup_managed_claude_agents_link
+          unlink_claude_wrapper
+          ;;
+        status)
+          status_claude_agents_placeholder
+          status_claude_wrapper
+          ;;
+      esac
       ;;
     codex)
       run_for_rule "$agent_name" "$RULES_ROOT/AGENTS.md" "$HOME/.codex/AGENTS.md"
