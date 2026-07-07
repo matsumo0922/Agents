@@ -1,6 +1,8 @@
-# Skills
+# Agents
 
-AI Agent 用のスキルを管理し、GitHub 経由で複数 PC から同じ内容を参照するためのリポジトリです。
+Claude Code / Codex などの AI Agent で使うドキュメントやスキルを管理し、GitHub 経由で複数 PC から同じ内容を参照するためのリポジトリです。
+
+`skills/` 配下のスキルを `~/.claude/skills` と `~/.codex/skills` へ symlink で配布します。
 
 ## 構成
 
@@ -25,27 +27,35 @@ AGENTS.md
 CLAUDE.md
 ```
 
+## 基本方針
+
+- 回答・ドキュメントは日本語を基本にします。
+- Claude Code と Codex の両方から扱える内容として管理します。
+- スキルの配布は `~/.claude/skills` / `~/.codex/skills` への symlink で行います。
+- 公開リポジトリなので、秘密情報・API key・認証情報・個人用 cache はコミットしません。
+- `CLAUDE.md` は `@AGENTS.md` の参照だけにし、ルール本文は `AGENTS.md` に集約します。
+
 ## セットアップ
 
-リンク状態を確認します。
+スキルのリンク状態を確認します。
 
 ```bash
 make status
 ```
 
-`~/.claude/skills` と `~/.codex/skills` へ symlink を作成します。
+`skills/` 配下のスキルを `~/.claude/skills` と `~/.codex/skills` へ symlink します。
 
 ```bash
 make link
 ```
 
-Claude Code だけにリンクしたい場合は `TARGETS` を指定します。
+Claude Code だけにスキルをリンクしたい場合は `TARGETS` を指定します。
 
 ```bash
 TARGETS=claude make link
 ```
 
-作成した symlink だけを外します。
+このリポジトリから作成したスキル symlink だけを外します。
 
 ```bash
 make unlink
@@ -55,7 +65,8 @@ make unlink
 
 - 既存の実体ディレクトリや別 symlink がある場合、`link` は削除せず `~/.skills-repo-backups/<timestamp>/` へ退避します。
 - `unlink` はこのリポジトリを指している symlink だけを削除します。
-- 公開リポジトリなので、cache・session・認証情報・個人用設定はコミットしません。
+- `scripts/link-skills.sh` は `skills/` 配下だけを配布対象にします。
+- cache・session・認証情報・個人用設定はコミットしません。
 
 ## 管理中のスキル
 
