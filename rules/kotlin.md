@@ -1,6 +1,6 @@
 # Kotlin / Jetpack Compose 規約
 
-Kotlin プロジェクト共通のコーディング規約。整形など静的解析で判定できる規約（trailing comma、メソッドチェーンの改行、Composable の `modifier` 引数、ラムダ引数名の時制、Immutable なコレクション型の強制など）は各プロジェクトの detekt / compose-rules 設定で強制する。このファイルには静的解析で判定できない、判断を伴う規約だけを置く。
+Kotlin プロジェクト共通のコーディング規約。整形など静的解析で判定できる規約（trailing comma、メソッドチェーンの改行、Composable の `modifier` 引数、ラムダ引数名の時制、Immutable なコレクション型の強制など）は `rules/lint/` のテンプレートを取り込んだ detekt / compose-rules 設定で強制する。このファイルには静的解析で判定できない、判断を伴う規約だけを置く。
 
 ## Kotlin
 
