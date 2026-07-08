@@ -1,4 +1,4 @@
-.PHONY: link unlink status link-skills unlink-skills status-skills link-rules unlink-rules status-rules
+.PHONY: link unlink status link-skills unlink-skills status-skills link-rules unlink-rules status-rules link-project unlink-project status-project
 
 link: link-skills link-rules
 
@@ -23,3 +23,12 @@ unlink-rules:
 
 status-rules:
 	./scripts/link-rules.sh status
+
+link-project:
+	./scripts/link-project-rules.sh link $(PROJECT)
+
+unlink-project:
+	./scripts/link-project-rules.sh unlink $(PROJECT)
+
+status-project:
+	./scripts/link-project-rules.sh status $(PROJECT)

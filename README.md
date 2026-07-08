@@ -30,6 +30,7 @@ rules/
 scripts/
   link-skills.sh
   link-rules.sh
+  link-project-rules.sh
 Makefile
 AGENTS.md
 CLAUDE.md
@@ -83,12 +84,32 @@ make unlink-skills
 make unlink-rules
 ```
 
+## Kotlin プロジェクトへの規約配布
+
+`rules/kotlin.md` と `rules/lint/` は、Kotlin プロジェクトごとに opt-in で配布します。
+
+```bash
+make link-project PROJECT=~/dev/App/OneNavi
+make status-project PROJECT=~/dev/App/OneNavi
+make unlink-project PROJECT=~/dev/App/OneNavi
+```
+
+`link-project` は次を行います。
+
+- プロジェクトの `AGENTS.md` に `rules/kotlin.md` の全文をマーカー付き管理ブロック（`<!-- agents-rules:kotlin:begin -->` 〜 `end`）として注入・更新します。プロジェクト固有の記述はそのまま残ります。
+- プロジェクトの `CLAUDE.md` が無ければ `@AGENTS.md` の1行で作成します。既にある場合は変更せず、`@AGENTS.md` 参照が無ければ warn を表示します。
+- `rules/lint/` の `detekt.yml`（→ `config/detekt/detekt.yml`）と `.editorconfig` を、存在しない場合のみコピーします（copy-once。以後の調整はプロジェクト側の所有物です）。
+
+`rules/kotlin.md` を更新したら、各プロジェクトで `make link-project` を再実行して管理ブロックを更新します。`make status-project` が `stale` を表示した場合が再実行のサインです。
+
 ## 注意
 
 - 既存の実体ディレクトリや別 symlink がある場合、`link` は削除せず `~/.agents-repo-backups/<timestamp>/` へ退避します。
 - `unlink` はこのリポジトリを指している symlink と generated wrapper だけを削除します。
 - `scripts/link-skills.sh` は `skills/` 配下だけを配布対象にします。
 - `scripts/link-rules.sh` は `rules/AGENTS.md` を配布対象にします。
+- `scripts/link-project-rules.sh` の管理ブロックはプロジェクトのリポジトリにコミットされる前提です。他のコントリビューターや別 PC でも Agents リポジトリなしでそのまま機能します。
+- `unlink-project` は管理ブロックだけを削除します。`CLAUDE.md` と lint ファイルは残します。
 - `~/.claude/CLAUDE.md` は `rules/AGENTS.md` と `~/.claude/RTK.md` を参照する generated wrapper として作成します。
 - `~/.claude/AGENTS.md` は作成しません。`CLAUDE.md` の wrapper だけを配布し、`AGENTS.md` 直読みがある環境でも二重注入しない構成にします。
 - `~/.codex/AGENTS.md` は symlink です。`rtk init -g --codex` やエディタでの編集は `rules/AGENTS.md` に write-through するため、RTK 初期化は `make link` の前に実行し、リンク後に設定を変更した場合は `rtk git status -sb --untracked-files=all` で正本が汚れていないことを確認します。
