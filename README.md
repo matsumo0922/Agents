@@ -22,6 +22,7 @@ skills/
     agents/openai.yaml
 rules/
   AGENTS.md
+  kotlin.md
 scripts/
   link-skills.sh
   link-rules.sh
@@ -38,7 +39,8 @@ CLAUDE.md
 - Codex 向け共通指示の配布は `~/.codex/AGENTS.md` への symlink で行います。
 - Claude Code 向け共通指示の配布は `~/.claude/CLAUDE.md` の wrapper 生成で行います。
 - 公開リポジトリなので、秘密情報・API key・認証情報・個人用 cache はコミットしません。
-- ルール本文は `rules/AGENTS.md` に集約します。
+- 全プロジェクト共通のルール本文は `rules/AGENTS.md` に集約します。エージェントの挙動・ドキュメント・メモリ・Git 運用のルールを置き、判断を伴わない整形規約は置きません。
+- Kotlin / Jetpack Compose プロジェクト向けの規約は `rules/kotlin.md` に置き、各プロジェクトの CLAUDE.md / AGENTS.md から参照して使います。静的解析で判定できる規約は各プロジェクトの detekt / compose-rules 設定で強制します。
 
 ## セットアップ
 
