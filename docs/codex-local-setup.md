@@ -8,10 +8,17 @@
 
 Codex sandbox 内で Gradle を実行する環境では、Gradle の user home を writable root 配下に置きます。Gradle は dependency cache や wrapper の配布物を user home に書き込むため、sandbox から書き込み可能な場所を指定すると `make test` や `make detekt` 経由の Gradle 実行にも同じ設定が効きます。
 
-まず cache directory を作成します。パスは自分の Codex writable root 配下に合わせます。
+まず `~/.codex/config.toml` の `[sandbox_workspace_write].writable_roots` を確認します。この値が、Codex の `workspace-write` sandbox から書き込み可能な追加 root です。
+
+```toml
+[sandbox_workspace_write]
+writable_roots = ["~/dev"]
+```
+
+`~/dev` は例です。使用する PC に合わせて、実在する作業ディレクトリを writable root にします。Gradle user home は、その writable root 配下に実体ディレクトリとして作成します。
 
 ```bash
-mkdir -p ~/dev/App/.codex-gradle-home
+mkdir -p ~/dev/.codex/gradle-home
 ```
 
 `~/.codex/config.toml` に `shell_environment_policy.set.GRADLE_USER_HOME` を設定します。`GRADLE_USER_HOME` には、使用する PC の絶対パスを指定します。
@@ -21,11 +28,13 @@ mkdir -p ~/dev/App/.codex-gradle-home
 inherit = "all"
 
 [shell_environment_policy.set]
-GRADLE_USER_HOME = "/Users/<user>/dev/App/.codex-gradle-home"
+GRADLE_USER_HOME = "/Users/<user>/dev/.codex/gradle-home"
 ```
 
 既に `[shell_environment_policy]` や `[shell_environment_policy.set]` がある場合は、既存の設定に `GRADLE_USER_HOME` だけを追加します。同じ table を重複して書きません。
 
+`GRADLE_USER_HOME` の配置先は実体ディレクトリにします。writable root 配下に symlink を置いて `~/.gradle` を指す構成では、sandbox が symlink の解決先への書き込みを止めるため、`~/.gradle` の lock file 問題を回避できません。
+
 Codex は起動時の設定を使うため、`~/.codex/config.toml` を編集した後は Codex を開き直すか、resume し直します。
 
-`.codex-gradle-home` は個人用 cache です。破損した場合や容量を空ける場合は削除できます。次回の Gradle 実行で必要な内容が再取得されます。
+Codex 用 Gradle user home は個人用 cache です。破損した場合や容量を空ける場合は削除できます。次回の Gradle 実行で必要な内容が再取得されます。
