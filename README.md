@@ -49,6 +49,8 @@ CLAUDE.md
 
 ## セットアップ
 
+Codex の PC ごとの個人環境設定は [docs/codex-local-setup.md](docs/codex-local-setup.md) を参照します。
+
 リンク状態を確認します。
 
 ```bash
