@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design"
+  short_description: "実装前の設計を architect サブエージェントと構造化質問で確定する"
+  default_prompt: "Use $design to read the code with an architect subagent, compare approaches, resolve human-judgment points via structured questions, and finalize a design section (posted to the issue on request)."

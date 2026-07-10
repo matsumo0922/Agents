@@ -12,6 +12,10 @@ skills/
     SKILL.md
     README.md
     prompt-template.md
+  design/
+    SKILL.md
+    README.md
+    agents/openai.yaml
   dig/
     SKILL.md
     README.md
@@ -120,5 +124,6 @@ make unlink-project PROJECT=~/dev/App/OneNavi
 ## 管理中のスキル
 
 - [codex-orchestrator](skills/codex-orchestrator/README.md): Codex CLI の `/goal` 指示ファイルを生成し、複数作業をサブエージェントへ委任するためのスキル。
+- [design](skills/design/README.md): 実装前の設計を architect サブエージェントと構造化質問で確定し、issue の「## 設計」として投稿するためのスキル。
 - [dig](skills/dig/README.md): プランの暗黙の前提と未検討リスクを、構造化質問の反復インタビューで掘り起こすためのスキル。
 - [issue-pr-autopilot](skills/issue-pr-autopilot/README.md): issue や作業説明を起点に、worktree 実装、PR 作成、レビュー反復まで自走させるためのスキル。
