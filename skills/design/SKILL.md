@@ -1,11 +1,11 @@
 ---
 name: design
-description: "GitHub issue や作業説明を起点に、最上位ティアの architect サブエージェントがコードを読んで候補アプローチを比較し、人間判断が必要な論点だけを構造化質問で確定して、実装エージェントにそのまま渡せる「## 設計」セクションを issue に投稿する。Use when the user asks to design a feature or fix before implementation, create a design section for an issue, 設計して, 設計を作って, 実装方針を固めて, アーキテクチャを決めて, ## 設計を書いて, or to prepare an issue for issue-pr-autopilot."
+description: "GitHub issue や作業説明を起点に、最上位ティアの architect サブエージェントがコードを読んで候補アプローチを比較し、人間判断が必要な論点だけを構造化質問で確定して、実装エージェントにそのまま渡せる「## 設計」を作る。ユーザーの指示があれば issue に投稿する。Use when the user asks to design a feature or fix before implementation, create a design section for an issue, 設計して, 設計を作って, 実装方針を固めて, アーキテクチャを決めて, ## 設計を書いて, or to prepare an issue for issue-pr-autopilot."
 ---
 
 # Design
 
-GitHub issue または会話中の作業説明を対象に、実装前の設計を確定する。要件の言い換えではなく構造の決定を行う: 新規コンポーネントの居場所と責務、ファイル単位の変更マップ、状態遷移・境界（lock / transaction / API contract）の決定。成果物は issue-pr-autopilot が回収できる「## 設計」セクションであり、実装・コード変更は行わない。
+GitHub issue または会話中の作業説明を対象に、実装前の設計を確定する。要件の言い換えではなく構造の決定を行う: 新規コンポーネントの居場所と責務、ファイル単位の変更マップ、状態遷移・境界（lock / transaction / API contract）の決定。成果物は issue-pr-autopilot が回収できる形式の「## 設計」であり、実装・コード変更は行わない。
 
 Codex / Claude Code など複数の実行環境から使われるため、特定製品の機能名に依存しない。「構造化質問ツール」は Claude Code では AskUserQuestion、Codex では request_user_input を指し、どちらも無い環境では番号付き選択肢のテキスト質問で代替する。環境固有の最適化は末尾の「環境別ヒント」に従う。
 
@@ -92,9 +92,8 @@ main agent には次だけを返してください。設計の全文は返さな
 ```
 
 - 決定事項の帰属: 質問で確定した決定は（ユーザー確認済み）、architect が独断で決めた高リスク判断と保留論点は（agent 仮決め）を付ける。仮決めは issue-pr-autopilot が「人間に確認してほしいこと」へ転記する対象になる。
-- issue がある場合は issue 本文へ「## 設計」セクションとして追記する。既にある場合は置換する（`gh issue view --json body` で現本文を取得し、編集後に `gh issue edit --body-file`）。
-- issue が無い場合は issue の新規作成（日本語 title・本文 + ## 設計）を提案する。ユーザーが不要と言った場合は「## 設計」全文をチャットに出して手動転記に委ねる。
-- 投稿後、チャットには要約だけを出す: 推奨アプローチ 1 行 / 決定 N 件（うち仮決め N 件）/ issue URL。設計全文の再掲はしない。
+- 確定した「## 設計」は記録ファイルに置く。ユーザーが issue への投稿を指示した場合（issue-pr-autopilot に別セッション・別マシンで渡す等）だけ、issue 本文の「## 設計」セクションとして追記・置換する（`gh issue view --json body` で現本文を取得し、編集後に `gh issue edit --body-file`）。記録ファイルは永続しないため、セッションを跨いで使う予定が見えるときは投稿を一言提案してよい。
+- 完了時、チャットには要約だけを出す: 推奨アプローチ 1 行 / 決定 N 件（うち仮決め N 件）/ 記録ファイルのパス（投稿した場合は issue URL）。設計全文の再掲はしない。
 
 ## 環境別ヒント
 
