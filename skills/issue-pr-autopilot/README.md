@@ -19,6 +19,7 @@ GitHub issue や短い作業説明を起点に、兄弟 worktree で実装、コ
 - **差分スコープの再レビュー**: round 2 以降は同じ reviewer を継続し、前回指摘の対応確認と新規 diff だけを見る
 - **未確認観点の申告**: reviewer は APPROVED 時も確認できなかった観点を申告し、main agent が PR の「人間に確認してほしいこと」に転記する
 - **GitHub 投稿の最小化**: PR に投稿するのは round 1 レビューと最終 APPROVED コメント（サマリー + 指摘対応表）のみ
+- **役割別モデルティア**: 多ターンの実装 worker はバランスティア、1 パスの round 1 レビューは最上位ティア、round 2 以降は同じ reviewer のまま低 effort。環境ごとの具体的な割当は SKILL.md の「環境別ヒント」に定義
 
 ## ファイル
 
