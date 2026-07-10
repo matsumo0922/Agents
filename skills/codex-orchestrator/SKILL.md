@@ -75,6 +75,7 @@ git status --short                      # メイン checkout が clean か
 
 - `/goal <目的>` は検証可能な終了条件付きの自律ループ（codex-cli 0.128+、`goals` feature stable）。`/goal pause` / `resume` / `clear` で制御。**objective は 4,000 文字制限**のため長い指示はファイル参照にする
 - サブエージェントは**明示的に spawn を指示**しないと作られない。worker / explorer / default の 3 種、並列上限 `agents.max_threads`（デフォルト 6）
+- worker の model はバランスティア（`gpt-5.6-terra`、`model_reasoning_effort = "high"` 等）で足りる。レビュアーには最上位ティア（`gpt-5.6-sol`）を割り当てる。`model_reasoning_effort` の `ultra` はモデル内部でサブエージェントを spawn し、本 skill の並列 worker 構成と二重になる上、`agents.max_threads` への影響が未確認のため使わない
 - `request_user_input` は Plan モード専用（`default_mode_request_user_input` は under development で実用不可）。**`/goal` 中に人間へ対話質問はできない**前提で、仕様判断は issue/PR への日本語コメント + 仮決め続行プロトコルで処理する
 - 実装もレビューも同一 GitHub アカウントのため**自分の PR に `gh pr review --approve` / `--request-changes` は実行不可**。`gh pr comment` ベースの「## レビュー (ラウンド N)」/「## レビュー結果: APPROVED」プロトコルで代替する
 - Codex の起動はサンドボックス緩め（`codex --full-auto` 等）でないと gh / git / ビルドのたびに承認要求で自律性が死ぬ
