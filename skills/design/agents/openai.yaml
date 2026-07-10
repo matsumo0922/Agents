@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design"
+  short_description: "実装前の設計を確定し、issue の「## 設計」として投稿する"
+  default_prompt: "Use $design to read the code with an architect subagent, compare approaches, resolve human-judgment points via structured questions, and post a design section to the issue."
