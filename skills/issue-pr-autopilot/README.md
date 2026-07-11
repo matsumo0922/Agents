@@ -17,10 +17,12 @@ GitHub issue や短い作業説明を起点に、兄弟 worktree で実装、コ
 - **設計ゲート**: 設計が見つからない複数レイヤー変更は、main agent の推定で埋めずに、ユーザーへの質問または最上位ティアの設計サブエージェントで設計を確定し、issue に「## 設計」として投稿してから worker を spawn する
 - **検証の信頼チェーン**: 検証結果は「コマンド / 結果 / HEAD SHA」の台帳で共有し、reviewer はテストを再実行しない。再検証は HEAD が動いたときだけ
 - **コンテキストノート**: issue 本文や規約の調査は 1 回だけ行い `/tmp/issue-pr-autopilot/<slug>.md` に書き出し、全サブエージェントが参照する
+- **round 1 で出し尽くす**: reviewer は最初の該当指摘で止まらず全指摘を列挙し、must-fix は同根クラスの全経路を grep / call graph 追跡で 1 グループにまとめ、各指摘に「閉じる条件」（満たすべき不変条件とテスト境界）を付ける。round 2 以降の同根新規指摘は round 1 の網羅漏れとみなす
 - **差分スコープの再レビュー**: round 2 以降は同じ reviewer を継続し、前回指摘の対応確認と新規 diff だけを見る
 - **未確認観点の申告**: reviewer は APPROVED 時も確認できなかった観点を申告し、main agent が PR の「人間に確認してほしいこと」に転記する
 - **GitHub 投稿の最小化**: PR に投稿するのは round 1 レビューと最終 APPROVED コメント（サマリー + 指摘対応表）のみ
-- **役割別モデルティア**: Codex では main = Sol medium、設計 = Sol high、実装 = Terra high、レビュー = Sol xhigh。round 2 以降は同じ reviewer と effort を維持し、前回指摘と新規 diff だけに入力を絞る。環境ごとの具体的な割当は SKILL.md の「環境別ヒント」に定義
+- **役割別モデルティア**: Codex では main = Sol medium、設計 = Sol xhigh、実装 = Sol medium、レビュー = Sol xhigh。round 2 以降は同じ reviewer と effort を維持し、前回指摘と新規 diff だけに入力を絞る。環境ごとの具体的な割当は SKILL.md の「環境別ヒント」に定義
+- **進捗はメッセージではなく worktree 観察**: 実行中の worker への進捗確認メッセージはターンを乱すため送らず、worker worktree の git log / status / diff を読み取り専用で観察する。停滞判定は経過時間ではなく worktree の無変化で行う
 
 ## ファイル
 
