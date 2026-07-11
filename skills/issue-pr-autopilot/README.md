@@ -21,6 +21,7 @@ GitHub issue や短い作業説明を起点に、兄弟 worktree で実装、コ
 - **未確認観点の申告**: reviewer は APPROVED 時も確認できなかった観点を申告し、main agent が PR の「人間に確認してほしいこと」に転記する
 - **GitHub 投稿の最小化**: PR に投稿するのは round 1 レビューと最終 APPROVED コメント（サマリー + 指摘対応表）のみ
 - **役割別モデルティア**: Codex では main = Sol medium、設計 = Sol xhigh、実装 = Sol medium、レビュー = Sol xhigh。round 2 以降は同じ reviewer と effort を維持し、前回指摘と新規 diff だけに入力を絞る。環境ごとの具体的な割当は SKILL.md の「環境別ヒント」に定義
+- **進捗はメッセージではなく worktree 観察**: 実行中の worker への進捗確認メッセージはターンを乱すため送らず、worker worktree の git log / status / diff を読み取り専用で観察する。停滞判定は経過時間ではなく worktree の無変化で行う
 
 ## ファイル
 
