@@ -13,7 +13,10 @@ issue-pr-autopilot の reviewer が round 1 で使う。設計形式の定義は
 
 ## 開始前チェック（G4）
 
-レビューを始める前に、検証台帳の最終エントリの SHA と worktree HEAD の一致を read-only 操作（`git rev-parse HEAD` 等）で確認する。不一致ならレビューせず main agent に差し戻す。build / test / lint は実行しない（検証台帳を信頼する）。
+レビューを始める前に、検証台帳の最終エントリについて次の 2 つを確認する。いずれかを満たさない場合はレビューせず main agent に差し戻す。build / test / lint は実行しない（検証台帳を信頼する。SHA 確認は `git rev-parse HEAD` 等の read-only 操作のみ）。
+
+1. SHA が worktree HEAD と一致する。
+2. validation scope が現在の phase に要求される tier を満たす: 初回レビュー = full / レビュー修正後の再レビュー = compile + 修正対象の targeted tests 以上 / rebase 後 = affected（overlap なしなら compile）以上 / 最終 APPROVED 前 = full。SHA が一致していても scope が不足する entry（広い変更後の compile-only 等）はゲートを通さない。
 
 ## pass 1: 設計反証
 
