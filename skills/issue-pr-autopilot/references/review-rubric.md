@@ -52,8 +52,8 @@ review_result に、全 review point（反証 5 ベクトル + pass 2 の観点 
 ```
 
 - unchecked には必ず理由を付ける（実機が無い、負荷は観測不能、等）。
-- **safety・migration・security に属する review point が unchecked のまま APPROVED を返さない。** 該当する場合は追加確認を行うか、main に「分割または人間確認事項化が必要」と返す。
-- unchecked は main が PR description の「人間に確認してほしいこと」へ転記する。
+- **safety・migration・security に属する review point が unchecked のまま APPROVED を返さない。** PR description の「人間に確認してほしいこと」への転記は未確認事項の可視化であって unchecked の解消ではない。閉じる方法は 2 つだけ: (1) 人間の回答または観測可能な証拠を受けて reviewer が checked と再判定する (2) 該当範囲を分割して本 PR のスコープから除外する。どちらも成立しない間は APPROVED を保留し、main に「人間回答が必要」または「分割が必要」と返す。
+- safety・migration・security 以外の unchecked は APPROVED を妨げない。main が PR description の「人間に確認してほしいこと」へ転記する。
 
 ## evidence matrix 突合基準
 

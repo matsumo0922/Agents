@@ -392,7 +392,7 @@ must-fix / should がゼロになったら reviewer は APPROVED を返す。**n
 
 main agent は最終 APPROVED コメントの投稿前に次を照合する（G5）。
 
-1. review_point_matrix に safety・migration・security の unchecked が残っていない。
+1. review_point_matrix に safety・migration・security の unchecked が残っていない。この unchecked は人間確認事項への転記（可視化）では閉じない: 人間の回答・観測可能な証拠で reviewer が checked と再判定するか、該当範囲を分割して本 PR のスコープから除外するまで G5 を通さない。自走中は仕様判断プロトコル（issue へ質問）で人間の回答を待つ。
 2. 検証台帳の最終エントリが「最終 HEAD の full validation 成功」である（不一致・scope 不足なら worker に最終検証を 1 回実行させる）。
 3. PR description の検証セクションが最終 HEAD と同期している（main が worker の更新材料で最新化する）。
 
