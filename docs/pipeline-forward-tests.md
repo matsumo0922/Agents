@@ -62,12 +62,21 @@ dig → design → issue-pr-autopilot パイプライン（設計契約・ゲー
 
 | 実行日 | 対象スキル改訂 | シナリオ | 充足 | 生成物の所在 | 備考 |
 |---|---|---|---|---|---|
-| 2026-07-13 | 設計契約 v2 導入時（branch `agent/21-pipeline-contract-redesign`） | 族 1（kobato fixture） | 1-1 ✓ / 1-2 ✓ / 1-3 ✓ / 1-4 ✓ / 1-5 △ / 1-6 ✓ | セッション scratchpad `fwd-test/`（fixture・設計・falsification_result） | 1-5: スコープ判定の機構（客観 signal 記録・designer 判断・falsifier による妥当性検証）は動作したが、fixture の各ファイルが小さく「網羅可能」判断となり分割提案自体は再現されず。falsifier もこの判断を妥当と支持 |
-| 2026-07-13 | 同上 | 族 2（tsugumi fixture） | 2-1 ✓ / 2-2 ✓ / 2-3 ✓ / 2-4 ✓ / 2-5 未実施 / 2-6 ✓ | 同上（fixture・設計・worker evidence matrix） | 2-5: rebase → 新 cycle 判定は実 PR 運用が必要なため未再現（定義は autopilot SKILL.md の cycle 規則）。次回の実運用 autopilot 実行で確認する |
+| 2026-07-13 | 設計契約 v2 導入時（branch `agent/21-pipeline-contract-redesign`）実行 1 回目 | 族 1（kobato fixture） | 1-1 ✓ / 1-2 ✓ / 1-3 ✓ / 1-4 ✓ / 1-5 △ / 1-6 ✓ | セッション scratchpad `fwd-test/`（fixture・設計・falsification_result） | 1-5: スコープ判定の機構は動作したが、fixture の各ファイルが小さく「網羅可能」判断となり分割提案は未発火 → 実行 2 回目で解消 |
+| 2026-07-13 | 同上・実行 1 回目 | 族 2（tsugumi fixture） | 2-1 ✓ / 2-2 ✓ / 2-3 ✓ / 2-4 ✓ / 2-5 未実施 / 2-6 ✓ | 同上（fixture・設計・worker evidence matrix） | 2-5 と reviewer 契約は実行 2 回目で検証 |
+| 2026-07-13 | 同上・実行 2 回目 | 族 1 拡張（kobato + Web/OpenAPI/runbook/MCP、issue スコープ拡大） | 1-5 ✓ | 同上（s1b 設計） | designer が客観 signal（7 layer / migration / security / consumer 6+ / DB hot path）を根拠に「網羅不能」と判定し、単独 merge・deploy 可能な 5 stage 分割案 + 元 DoD を保持した stage mapping を生成 |
+| 2026-07-13 | 同上・実行 2 回目 | 族 2（owner 回答で高リスク前提を解消した再開 run） | 2-5 ✓ / reviewer 契約 ✓（G4 scope 検査・2 パス・review point matrix・G5） | 同上（review_result cycle 1-2・cycle 表） | main → worker → G3 → reviewer 2 パス → round 2 APPROVED → material rebase で cycle 2 → 統合レビュー APPROVED → G5 成立、を停止条件の迂回なしで完走 |
 
 ### 2026-07-13 実行の詳細
 
 - ハーネス: fixture 2 リポジトリとスキル bundle の export を Agents リポジトリ外の一時ディレクトリに配置。test agent（designer / falsifier / worker）には raw fixture・コンテキストノート・契約 reference の絶対パスのみを渡し、本ドキュメント・期待結果・「検証中」の事実は伝えていない。全 test agent は fresh thread で実行。照合と本記録は生成物完成後に evaluator が実施。
 - 族 1: designer が事実表で config 100,000 / DB 保存値 1,000,000 / 表示値の三重不一致を正本分離し（1-1）、risk-reducing 経路（STOP / TP / manual close）を新 gate に通さない設計を選択、状態遷移 matrix で全状態の risk-reducing 列が success であることを確認した（1-2）。consumer matrix 4 行（1-3）、migration → deploy の順序制約と GRANT を含む deployment 手順（1-4）を生成。main の構造判定（6 layer / migration / security / 複数 consumer 該当）で独立 falsifier を必須発動し、falsifier は designer が「設計修正済み」と宣言した FOR UPDATE 直列化に対して insert 先行 interleaving の反例を提示、境界 timestamp・rollback 中の silent 混合・復旧経路の不在・見落とし前提 4 件も検出した（1-6。anchor された自己申告を独立反証が破る、という導入目的どおりの挙動）。
 - 族 2: designer が reconciler の例外握りつぶしを call graph の終端（hardHaltSweep / reconcile / markSuccessfulPass の skip）まで追跡し、audit 障害中に保護処理の新規発動が止まる帰結を（高リスク・要人間確認）として明示（2-1）。audit failure と send 例外の複合時は AuditWriteException 優先 + 元例外 suppressed と決定（2-2）。non-functional contract は既知（出典）/ 推定（根拠）/ 未測定（測定方法・fail-safe 上限・deploy 後確認）で分類（2-3）。NoopAuditSink 既定値の削除と全 entrypoint の明示配線を設計し、worker 実装後の grep で定義行のみ残存を確認（2-4）。worker の完了報告は evidence matrix 形式で、production call path 列は 3 entrypoint からの実経路、検証台帳は validation scope 付き・SHA 一致で G3 受理（2-6）。
-- 高リスク未検証前提プロトコル: 両 designer とも high リスク未検証前提を仮決めせず列挙して返した（族 2 では「既存 DB スキーマの additive 列追加可否」等 3 件）。実運用の自走ではこれらは 3 分岐の停止条件に該当する。本 forward test では worker 段の検証を目的として evaluator 判断で続行した。
+- 高リスク未検証前提プロトコル: 両 designer とも high リスク未検証前提を仮決めせず列挙して返した（族 2 では「既存 DB スキーマの additive 列追加可否」等 3 件）。実運用の自走ではこれらは 3 分岐の停止条件に該当する。
+
+### 2026-07-13 実行 2 回目の詳細
+
+- 族 1 拡張（スコープ分割の発火）: fixture に Web コンソール 3 画面・OpenAPI・deploy runbook・分析 MCP を追加し、issue のスコープを epoch 化 + 評価コンソール全面改修 + OpenAPI 契約 + role 追随 + 運用手順に拡大。fresh designer は「1 worker / 1 reviewer では網羅不能」と判定し、客観 signal を根拠に記録した上で、各 stage が単独で merge・deploy 可能かつ backward-compatible な 5 stage 分割案と、元の受け入れ条件を変更しない stage mapping（各条件 → stage 番号）を生成した。
+- 族 2（実運用パイプラインの完走）: 実行 1 回目で停止条件に該当した高リスク未検証前提 3 件に owner 回答（列追加可・DB 接続可・保護停止の帰結受容）を与えて再開。main の G4（SHA 一致 + validation scope の tier 適合）→ reviewer round 1 の 2 パス（should 1 / nit 4、review point matrix で migration 順序を unchecked として人間確認事項化）→ worker の cluster 修正と G3 受理 → round 2 APPROVED → base への material overlap コミットに対する rebase（conflict 解消 + affected 検証 + 最終 HEAD full 検証）→ cycle 2 / round 1 として統合レビュー APPROVED → G5（safety 系 unchecked なし・最終 HEAD full 成功・description 材料同期）の順で、停止条件の迂回なしに完走した。
+- cycle 表（族 2 run）: cycle 1 = トリガー: 初回実装 / rounds 2 / must-fix 0・should 1・nit 4 / origin: internal-r1 / wall-clock 約 40 分・compute: unknown。cycle 2 = トリガー: material rebase / rounds 1 / nit 1 / origin: internal-r1(rebase) / wall-clock 約 5 分・compute: unknown。round 番号は cycle 開始でリセットされ、rebase は同一 round に混入しない。
+- 未対応 nit の扱い: cycle 2 nit-1（非 default maxAttempts の境界テスト）は任意対応として対応表に記録し、残存事項扱い。
