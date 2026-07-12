@@ -126,7 +126,7 @@ rubric の職掌 4 点（反例列挙 / matrix 発動判定の妥当性 / スコ
 
 ### Claude Code
 
-- architect = 最上位ティア（`effort: high`）。質問反映の継続は SendMessage で行い、再 spawn しない。falsifier は同ティアで新規 spawn する（clean context のため継続にしない）。
+- architect / falsifier = Fable 5（`effort: high`）。質問反映の継続は SendMessage で行い、再 spawn しない。falsifier は新規 spawn する（clean context のため継続にしない）。
 - main agent は role 別 reference（design-contract.md 等）を読まず、絶対パスへ解決してサブエージェント指示に埋め込む。
 - 構造化質問は AskUserQuestion。1 回の呼び出しで最大 4 問だが、本スキルでは 2〜3 問に抑える。
 - plan mode 中に呼ばれた場合は、ExitPlanMode でプランを提示する前に設計を確定し、プランへ反映する。
