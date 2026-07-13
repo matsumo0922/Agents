@@ -161,7 +161,7 @@ main agent には次だけを返してください。コード本文は返さな
 designer の成果物を確定する前に反証する。
 
 - main agent が deliverable 2 を gate schema の客観条件リストに照らして判定し、該当すれば clean context の falsifier を 1 体 spawn する（必須。designer 自身に「該当なし」と判断させない。迷ったら発動）。falsifier には設計セクション全文・`falsifier-rubric.md` の絶対パス・対象リポジトリ（読み取りのみ）だけを渡し、rubric の職掌 4 点を falsification_result 形式で返させる。該当しない場合は designer に rubric に従った自己反証を別ターンで依頼する。自己反証で blocking 反例が 1 件でも出た場合は独立反証に昇格し、修正後の解消確認も独立 falsifier が行う。
-- falsification_result は designer に渡し、rubric の処置ルールに従って処置させ、blocking / non-blocking 区分とともに設計の「反証」セクションへ記録させる。**blocking 反例（受け入れ条件・宣言 invariant・safety / migration / security を破る反例）は designer 単独の「受容 + 理由」で閉じられない**: 設計を修正して falsifier に再確認させるか、人間判断が必要な場合は高リスク未検証前提プロトコルの停止分岐（issue へ質問投稿）に乗せる。
+- falsification_result は designer に渡し、rubric の処置ルールに従って処置させ、blocking / non-blocking 区分とともに設計の「反証」セクションへ記録させる。**falsifier-rubric.md の基準で blocking と判定された反例は、designer 単独の「受容 + 理由」で閉じられない**: 設計を修正して falsifier に再確認させるか、人間判断が必要な場合は高リスク未検証前提プロトコルの停止分岐（issue へ質問投稿）に乗せる。
 - blocking 反例がゼロになり、反証処置まで完了した設計を issue の「## 設計」セクションとして投稿してからノートに展開する。blocking が残る設計で worker を spawn しない。
 
 ### 高リスク未検証前提の 3 分岐（自走時）
