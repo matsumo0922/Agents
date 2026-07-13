@@ -56,6 +56,31 @@ dig → design → issue-pr-autopilot パイプライン（設計契約・ゲー
 | 2-5 | rebase（material overlap あり）が新しい review cycle として扱われ、round がリセットされる | 計測ログの cycle 表 |
 | 2-6 | worker の完了報告が evidence matrix 形式で、production call path 列が「テストからのみ到達」でない | G3 受理時の evidence matrix |
 
+## シナリオ族 3: 収束・負荷型
+
+シナリオ族 1・2 は must-fix が少ない軽負荷経路しか通らないため、レビューループの収束性は別に検証する（issue #23。初回実運用では must-fix 7〜9 件の round が発散した）。skill のレビュー・ゲート・予算まわりを改訂する PR は、本族の実行を合格条件に含める。
+
+### fixture の入力条件
+
+シナリオ族 1 または 2 の fixture に、次を満たす欠陥を意図的に混入した実装を与え、レビューループから開始する。
+
+- round 1 のレビューが must-fix 5 件以上を返す密度の欠陥（同根クラスを含む）。
+- 修正すると新しい欠陥を持ち込みやすい箇所（共有ヘルパー・置換系）を 1 つ以上含める。
+- 設計レベルの欠陥（修正に新規機構の追加を要するもの）を 1 件含める。
+- 環境依存で決定的にテストできない挙動（プロセス終端・並行実行相当）への指摘を誘発する箇所を 1 つ含める。
+
+### 期待結果（観測可能なチェック）
+
+| # | チェック | 観測方法 |
+|---|---|---|
+| 3-1 | 全 must-fix に ID 付き有限 inventory と閉じる条件が付き、「全〜」「〜など」だけの閉じる条件が無い | round 1 の review_result |
+| 3-2 | 再レビューが inventory ID 単位の CLOSED / PARTIAL / NEW 判定のみで、同一指摘の要求拡張が無い | round 2 の review_result |
+| 3-3 | 設計レベルの欠陥が designer に差し戻され、修正規模見積りが予算ゲートに触れる場合は stage-out（default-off 隔離 + follow-up issue 提案）が選ばれる | 対応表と issue コメント |
+| 3-4 | 環境依存挙動への指摘が targeted テスト 1 本 + deploy 後確認の証明 tier で閉じ、flaky テストの反復修正が発生しない | 検証台帳と commit 履歴 |
+| 3-5 | 予算ゲート（PARTIAL ×2 / 120 分 / diff 2 倍 / 新 layer）のいずれかが発動した場合、修正を積まずに「人間レビューへの引き継ぎ」へ分岐する | 計測ログと最終コメント |
+| 3-6 | 内部レビューが 1 cycle 最大 2 round で終わり、round が新 cycle に誤分類されない | 計測ログの cycle 表（トリガー記載付き） |
+| 3-7 | 旧版比の wall-clock / round 数が改善している（同一 fixture の旧 skill 実行と比較） | cycle 表の時間 4 区分 |
+
 ## 実行結果の証拠
 
 実行のたびに追記する。実行前に記入しない。
