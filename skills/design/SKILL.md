@@ -14,7 +14,7 @@ Codex / Claude Code など複数の実行環境から使われるため、特定
 ## 全体方針
 
 - main agent は薄いオーケストレーターに徹する。コード読解と設計立案は architect サブエージェントに委任し、main agent は対象特定・反証の発動判定・質問の提示・決定の記録・issue への投稿を行う。対象コードと分析過程（台帳）を main agent のコンテキストに読み込まない。確定した設計ドキュメントは読んでよく、ユーザーとの議論と最終確認にはむしろ読んで臨む。
-- サブエージェントを spawn・継続するたびに、割り当てたモデル名と effort をユーザーへの報告に明示する。
+- サブエージェントを spawn・継続するたびに、割り当てたモデル名（effort を指定できる環境では effort も）をユーザーへの報告に明示する。
 - このスキルをサブエージェントや fork されたコンテキストで実行しない（構造化質問がユーザーに届かない）。
 - 単一レイヤーで自明な変更には使わない。設計不要なものは issue-pr-autopilot の設計ゲートがそのまま通す。
 - dig は前提への挑戦、本スキルは構造の決定を担う。要件が未確定なまま設計に入らない（Phase 1 参照）。
@@ -103,14 +103,14 @@ rubric の職掌 4 点（反例列挙 / matrix 発動判定の妥当性 / スコ
 ```
 
 - **いずれにも該当しない場合**: 同一 architect に、falsifier-rubric.md に従った自己反証を別ターンで依頼する。自己反証で blocking 反例が 1 件でも出た場合は独立反証に昇格する: main が clean context の falsifier を spawn し、修正後の解消確認もその falsifier が行う。
-- main agent は falsification_result を architect に渡し、architect が rubric の処置ルールに従って各反例を処置し、blocking / non-blocking 区分とともにドラフトの「反証」セクションへ記録する。**blocking 反例は architect 単独の「受容 + 理由」で閉じられない**: 設計を修正して同じ falsifier に再確認させるか、構造化質問でユーザーが要件・リスク許容を明示変更するまで残る。non-blocking のみ architect が処置を決めてよい。matrix 発動判定・スコープ判定の誤りが指摘された場合は該当セクションを修正する。反証で新たに要質問の論点（価値判断）が生じた場合は Phase 3 の残ラウンドで確定させる。
+- main agent は falsification_result を architect に渡し、architect が rubric の処置ルールに従って各反例を処置し、severity（blocking / non-blocking）・scope・処置の区分とともにドラフトの「反証」セクションへ記録する。**blocking 反例は architect 単独の「受容 + 理由」で閉じられない**: rubric の 4 ルート（設計修正 + falsifier 再確認 / 保証の縮退 / stage-out / 構造化質問によるユーザーの要件・リスク許容の明示変更）のいずれかで閉じる。**対策が新しい機構（新規サブシステム・新 layer）を要する場合は、機構を足す前に stage-out で閉じられないかを必ず検討する**（設計の膨張は下流の実装・レビュー・検証をすべて遅くする）。non-blocking のみ architect が処置を決めてよい。matrix 発動判定・スコープ判定の誤りが指摘された場合は該当セクションを修正する。反証で新たに要質問の論点（価値判断）が生じた場合は Phase 3 の残ラウンドで確定させる。
 
 ## Phase 4: 設計確定（G1）
 
 次がすべて成立して初めて設計を確定できる。main agent がドラフトのセクション構造で確認する。
 
 1. 契約の必須 8 セクションと、発動した条件付きセクションがすべて存在する。
-2. 「反証」セクションに反証パスの結果と全反例の処置が blocking / non-blocking 区分付きで記録されており、**blocking 反例がゼロ**（設計修正後に falsifier が再確認済み、または人間判断で要件を明示変更済み）である。
+2. 「反証」セクションに反証パスの結果と全反例の処置が severity・scope・処置の区分付きで記録されており、**未解消の blocking 反例がゼロ**（rubric の 4 ルートのいずれかで閉じ済み。stage-out で閉じた blocking は隔離の falsifier 確認済み）である。
 3. high リスクかつ未検証の仮定が残っていない（質問で確定済み、または契約のプロトコルで処置済み）。
 4. 「スコープ判定」が記載されている。網羅不能の場合は staged PR 分割案があり、対話中はユーザーに分割方針を質問して確定している。
 
@@ -122,7 +122,7 @@ rubric の職掌 4 点（反例列挙 / matrix 発動判定の妥当性 / スコ
 
 ## 環境別ヒント
 
-コア原則: architect と falsifier は 1〜2 パスで品質が決まる役割のため、最上位ティアの高 effort を割り当てる。コードの長文脈読解を伴うため最軽量ティアを使わない。spawn 時のモデル名と effort の申告を忘れない。
+コア原則: falsifier は 1 パスの反証品質で決まる役割のため最上位ティアの高 effort を割り当てる。architect は質問・修正の往復が入るため、最上位ティアの標準〜高 effort で速度と両立させる。コードの長文脈読解を伴うため最軽量ティアを使わない。現行世代（Fable 5 / GPT-5.6）は手順の細目列挙より「ゴール + 制約 + 完了条件」で最も性能が出るため、指示テンプレートの必要部分だけを埋めて渡す。spawn 時のモデル名（effort を指定できる環境では effort も）の申告を忘れない。
 
 ### Claude Code
 
@@ -136,7 +136,7 @@ rubric の職掌 4 点（反例列挙 / matrix 発動判定の妥当性 / スコ
 ### Codex
 
 - main agent = `gpt-5.6-sol`（`model_reasoning_effort = "medium"`、`plan_mode_reasoning_effort = "high"`）を推奨する。
-- architect / falsifier = `gpt-5.6-sol`（`model_reasoning_effort = "xhigh"`）。読み込み中心のため組み込みの explorer エージェントが向く。falsifier は clean context で spawn する（確認済みの指定は `fork_turns = "none"`。fork 制御のパラメータ名・値域は実行環境で確認する）。
+- architect = `gpt-5.6-sol`（`model_reasoning_effort = "high"`。質問・修正の往復が入る役割のため）、falsifier = `gpt-5.6-sol`（`"xhigh"`。1 パスの反証品質で決まる役割。GPT-5.6 世代は `xhigh` を難問に限定するのが推奨のためこの役割に限る）。読み込み中心のため組み込みの explorer エージェントが向く。falsifier は clean context で spawn する（確認済みの指定は `fork_turns = "none"`。fork 制御のパラメータ名・値域は実行環境で確認する）。
 - Codex では、本 bundle の運用規約として main もその run で必要になった reference（設計契約等）を読んでよい（実行環境が必須 reference の読み込みを要求する場合はそれに従う）。読む対象を role 別 reference に絞り、不要な reference を読まない。
 - 構造化質問は request_user_input（1〜3 問）。
 - dig の起動は `$dig` 参照で行い、使えない場合は `~/.codex/skills/dig/SKILL.md` を読み込んで従う。
