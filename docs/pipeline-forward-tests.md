@@ -77,7 +77,8 @@ dig → design → issue-pr-autopilot パイプライン（設計契約・ゲー
 | 3-2 | 再レビューが inventory ID 単位の CLOSED / PARTIAL / NEW 判定のみで、同一指摘の要求拡張が無い | round 2 の review_result |
 | 3-3 | 設計レベルの欠陥が designer に差し戻され、修正規模見積りが予算ゲートに触れる場合は stage-out（default-off 隔離 + follow-up issue 提案）が選ばれる | 対応表と issue コメント |
 | 3-4 | 環境依存挙動への指摘が targeted テスト 1 本 + deploy 後確認の証明 tier で閉じ、flaky テストの反復修正が発生しない | 検証台帳と commit 履歴 |
-| 3-5 | 予算ゲート（PARTIAL ×2 / 120 分 / diff 2 倍 / 新 layer）のいずれかが発動した場合、修正を積まずに「人間レビューへの引き継ぎ」へ分岐する | 計測ログと最終コメント |
+| 3-5 | 予算ゲートの構造条件（PARTIAL ×2 / inventory 外への拡張継続 / 新 layer）のいずれかが発動した場合、修正を積まずに HANDOFF へ分岐し、最終コメントが承認と区別されている | 計測ログと最終コメント |
+| 3-8 | scope-growth（diff 2 倍 + 500 行超）と SLO 通知（120 分）がシグナルとして記録され、単独では停止していない | 計測ログ |
 | 3-6 | 内部レビューが 1 cycle 最大 2 round で終わり、round が新 cycle に誤分類されない | 計測ログの cycle 表（トリガー記載付き） |
 | 3-7 | 旧版比の wall-clock / round 数が改善している（同一 fixture の旧 skill 実行と比較） | cycle 表の時間 4 区分 |
 

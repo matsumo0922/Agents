@@ -63,7 +63,7 @@ high リスクかつ未検証の仮定を残したまま設計を確定しない
 
 設計確定前の反証パスの結果。実施方法・blocking 判定基準・処置ルールは `falsifier-rubric.md` に従う。
 
-- 全反例を blocking / non-blocking / stage-out 提案に分類して記録する。
+- 全反例を severity（blocking / non-blocking）・scope（introduced / worsened / pre-existing-out-of-scope）・処置の 3 軸で記録する。stage-out は処置であって severity ではない（scope を理由に severity を下げない）。
 - **blocking は architect / designer の判断では受容できない。** `falsifier-rubric.md` の処置ルール 4 ルート（設計修正 + falsifier 再確認 / 保証の縮退 / stage-out / 人間判断）のいずれかで閉じ、その決定と根拠を記録する。新しい機構の追加を要する対策は stage-out を先に検討する。自己反証で blocking が出た場合は独立 falsifier に昇格する。
 - non-blocking は処置（設計修正済み / 受容 + 理由）を付ける。
 - **設計確定（G1）の時点で未解消の blocking が 0 件**であること。反例ゼロの場合も「各ベクトルで探索した結果反例なし」と明記する。

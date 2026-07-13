@@ -44,15 +44,16 @@ review_result に、全 review point（反証 5 ベクトル + pass 2 の観点 
 <review_point_matrix>
 | review point | 結果 | 備考 |
 |---|---|---|
-| 反証ベクトル 1〜5（各行） | checked / unchecked | unchecked は理由必須 |
+| 反証ベクトル 1〜5（各行） | checked / unchecked / isolated_unverified | unchecked は理由必須 |
 | call graph 追跡 | checked / unchecked | |
 | evidence 突合 | checked / unchecked | |
 | 設計のレビュー観点の各項目 | checked / unchecked | |
 </review_point_matrix>
 ```
 
-- unchecked には必ず理由を付ける（実機が無い、負荷は観測不能、等）。
-- **safety・migration・security に属する review point が unchecked のまま仮承認（APPROVABLE_PENDING_FULL）を返さない。** PR description の「人間に確認してほしいこと」への転記は未確認事項の可視化であって unchecked の解消ではない。閉じる方法は 3 つ: (1) 人間の回答または観測可能な証拠を受けて reviewer が checked と再判定する (2) 該当範囲を分割して本 PR のスコープから除外する (3) 該当機能が default-off / feature flag で隔離されていることを確認して checked と再判定する（有効化条件は人間確認事項へ）。いずれも成立しない場合は仮承認を保留し、main に「人間回答が必要」「分割が必要」「隔離が必要」のいずれかを返す（main は G5 の引き継ぎステータスで確定できる）。
+- 各 review point の結果は checked / unchecked / **isolated_unverified** の 3 状態。unchecked には必ず理由を付ける（実機が無い、負荷は観測不能、等）。
+- **isolated_unverified**: 機能の正しさは未検証だが、default-off / feature flag による隔離を確認した状態。隔離の確認と機能の検証は別物なので checked にはしない。この状態にできるのは次の 3 条件をすべて reviewer が確認した場合だけ: (1) 実効設定が fresh install・既存環境の両方で default-off である (2) 別経路（既存設定・環境変数・他機能からの間接呼び出し）から有効化されない (3) 有効化には別 PR または明示的な検証 gate が必要である。確認内容と有効化条件を人間確認事項へ転記する。
+- **safety・migration・security に属する review point が unchecked のまま仮承認（APPROVABLE_PENDING_FULL）を返さない。** PR description の「人間に確認してほしいこと」への転記は未確認事項の可視化であって unchecked の解消ではない。閉じる方法: (1) 人間の回答または観測可能な証拠を受けて reviewer が checked と再判定する (2) 該当範囲を分割して本 PR のスコープから除外する (3) 上記 3 条件を確認して isolated_unverified にする。いずれも成立しない場合は仮承認を保留し、main に「人間回答が必要」「分割が必要」「隔離が必要」のいずれかを返す（main の終了状態は HANDOFF になる）。
 - safety・migration・security 以外の unchecked は仮承認を妨げない。main が PR description の「人間に確認してほしいこと」へ転記する。
 
 ## evidence matrix 突合基準

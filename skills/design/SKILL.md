@@ -103,14 +103,14 @@ rubric の職掌 4 点（反例列挙 / matrix 発動判定の妥当性 / スコ
 ```
 
 - **いずれにも該当しない場合**: 同一 architect に、falsifier-rubric.md に従った自己反証を別ターンで依頼する。自己反証で blocking 反例が 1 件でも出た場合は独立反証に昇格する: main が clean context の falsifier を spawn し、修正後の解消確認もその falsifier が行う。
-- main agent は falsification_result を architect に渡し、architect が rubric の処置ルールに従って各反例を処置し、blocking / non-blocking / stage-out 区分とともにドラフトの「反証」セクションへ記録する。**blocking 反例は architect 単独の「受容 + 理由」で閉じられない**: rubric の 4 ルート（設計修正 + falsifier 再確認 / 保証の縮退 / stage-out / 構造化質問によるユーザーの要件・リスク許容の明示変更）のいずれかで閉じる。**対策が新しい機構（新規サブシステム・新 layer）を要する場合は、機構を足す前に stage-out で閉じられないかを必ず検討する**（設計の膨張は下流の実装・レビュー・検証をすべて遅くする）。non-blocking のみ architect が処置を決めてよい。matrix 発動判定・スコープ判定の誤りが指摘された場合は該当セクションを修正する。反証で新たに要質問の論点（価値判断）が生じた場合は Phase 3 の残ラウンドで確定させる。
+- main agent は falsification_result を architect に渡し、architect が rubric の処置ルールに従って各反例を処置し、severity（blocking / non-blocking）・scope・処置の区分とともにドラフトの「反証」セクションへ記録する。**blocking 反例は architect 単独の「受容 + 理由」で閉じられない**: rubric の 4 ルート（設計修正 + falsifier 再確認 / 保証の縮退 / stage-out / 構造化質問によるユーザーの要件・リスク許容の明示変更）のいずれかで閉じる。**対策が新しい機構（新規サブシステム・新 layer）を要する場合は、機構を足す前に stage-out で閉じられないかを必ず検討する**（設計の膨張は下流の実装・レビュー・検証をすべて遅くする）。non-blocking のみ architect が処置を決めてよい。matrix 発動判定・スコープ判定の誤りが指摘された場合は該当セクションを修正する。反証で新たに要質問の論点（価値判断）が生じた場合は Phase 3 の残ラウンドで確定させる。
 
 ## Phase 4: 設計確定（G1）
 
 次がすべて成立して初めて設計を確定できる。main agent がドラフトのセクション構造で確認する。
 
 1. 契約の必須 8 セクションと、発動した条件付きセクションがすべて存在する。
-2. 「反証」セクションに反証パスの結果と全反例の処置が blocking / non-blocking / stage-out 区分付きで記録されており、**未解消の blocking 反例がゼロ**（rubric の 4 ルートのいずれかで閉じ済み）である。
+2. 「反証」セクションに反証パスの結果と全反例の処置が severity・scope・処置の区分付きで記録されており、**未解消の blocking 反例がゼロ**（rubric の 4 ルートのいずれかで閉じ済み。stage-out で閉じた blocking は隔離の falsifier 確認済み）である。
 3. high リスクかつ未検証の仮定が残っていない（質問で確定済み、または契約のプロトコルで処置済み）。
 4. 「スコープ判定」が記載されている。網羅不能の場合は staged PR 分割案があり、対話中はユーザーに分割方針を質問して確定している。
 
