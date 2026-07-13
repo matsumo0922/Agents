@@ -57,12 +57,14 @@ high リスクかつ未検証の仮定を残したまま設計を確定しない
 
 網羅不能と判断した場合は staged PR 分割案を書く: 各 stage のスコープ・依存順と、各 stage が単独で merge・deploy 可能かつ backward-compatible であること（これを満たさない分割は分割として成立しない）。元の受け入れ条件は変更せず保持し、stage mapping（各受け入れ条件 → stage 1 / 後続 stage / non-goal）を付ける。
 
+**stage 予算**: 各 stage には目安として「変更ファイル 〜25 / diff 〜1,500 行 / binding decision 〜10」の予算を適用する。強制 threshold ではないが、超過が見込まれる stage は再分割のシグナルとし、超過したまま進む場合は理由を書く。
+
 ### `### 反証`
 
 設計確定前の反証パスの結果。実施方法・blocking 判定基準・処置ルールは `falsifier-rubric.md` に従う。
 
-- 全反例を blocking / non-blocking に分類して記録する。
-- **blocking は architect / designer の判断では受容できない。** 設計を修正して独立 falsifier が解消を再確認するか、人間判断で要件・リスク許容を明示変更した場合だけ、その決定と根拠を記録して閉じられる。自己反証で blocking が出た場合は独立 falsifier に昇格する。
+- 全反例を blocking / non-blocking / stage-out 提案に分類して記録する。
+- **blocking は architect / designer の判断では受容できない。** `falsifier-rubric.md` の処置ルール 4 ルート（設計修正 + falsifier 再確認 / 保証の縮退 / stage-out / 人間判断）のいずれかで閉じ、その決定と根拠を記録する。新しい機構の追加を要する対策は stage-out を先に検討する。自己反証で blocking が出た場合は独立 falsifier に昇格する。
 - non-blocking は処置（設計修正済み / 受容 + 理由）を付ける。
 - **設計確定（G1）の時点で未解消の blocking が 0 件**であること。反例ゼロの場合も「各ベクトルで探索した結果反例なし」と明記する。
 
@@ -123,3 +125,5 @@ high リスクの未検証仮定・受け入れ条件の矛盾・owner 判断が
 ## スケール原則
 
 小さい変更には小さい設計を書く。必須 8 セクションは単一機能の変更なら各数行で足りる。条件付きセクションは発動条件に該当しない限り書かない。重い matrix を該当のない変更に強制しない。逆に、発動条件に該当する変更でセクションを省くことは契約違反である。
+
+設計本文の肥大は下流（worker / reviewer / falsifier）の全ターンを遅くする。設計本文には決定だけを書き、分析・比較・経緯は台帳に残す。目安として設計本文が 400 行を超えたら分割シグナルとして扱う（stage 分割、または反証の stage-out ルートで対策を分離する）。

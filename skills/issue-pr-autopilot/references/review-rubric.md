@@ -16,7 +16,7 @@ issue-pr-autopilot の reviewer が round 1 で使う。設計形式の定義は
 レビューを始める前に、検証台帳の最終エントリについて次の 2 つを確認する。いずれかを満たさない場合はレビューせず main agent に差し戻す。build / test / lint は実行しない（検証台帳を信頼する。SHA 確認は `git rev-parse HEAD` 等の read-only 操作のみ）。
 
 1. SHA が worktree HEAD と一致する。
-2. validation scope が現在の phase に要求される tier を満たす: 初回レビュー = full / レビュー修正後の再レビュー = compile + 修正対象の targeted tests 以上 / rebase 後 = affected（overlap なしなら compile）以上 / 最終 APPROVED 前 = full。SHA が一致していても scope が不足する entry（広い変更後の compile-only 等）はゲートを通さない。
+2. validation scope が現在の phase に要求される tier を満たす: 初回レビュー = full / レビュー修正後の再レビュー = compile + 修正対象の targeted tests 以上 / rebase 後 = affected（overlap なしなら compile）以上 / 仮承認（APPROVABLE_PENDING_FULL）= targeted 以上で可（full は仮承認後に worker が 1 回だけ実行する）。SHA が一致していても scope が不足する entry（広い変更後の compile-only 等）はゲートを通さない。
 
 ## pass 1: 設計反証
 
@@ -52,8 +52,8 @@ review_result に、全 review point（反証 5 ベクトル + pass 2 の観点 
 ```
 
 - unchecked には必ず理由を付ける（実機が無い、負荷は観測不能、等）。
-- **safety・migration・security に属する review point が unchecked のまま APPROVED を返さない。** PR description の「人間に確認してほしいこと」への転記は未確認事項の可視化であって unchecked の解消ではない。閉じる方法は 2 つだけ: (1) 人間の回答または観測可能な証拠を受けて reviewer が checked と再判定する (2) 該当範囲を分割して本 PR のスコープから除外する。どちらも成立しない間は APPROVED を保留し、main に「人間回答が必要」または「分割が必要」と返す。
-- safety・migration・security 以外の unchecked は APPROVED を妨げない。main が PR description の「人間に確認してほしいこと」へ転記する。
+- **safety・migration・security に属する review point が unchecked のまま仮承認（APPROVABLE_PENDING_FULL）を返さない。** PR description の「人間に確認してほしいこと」への転記は未確認事項の可視化であって unchecked の解消ではない。閉じる方法は 3 つ: (1) 人間の回答または観測可能な証拠を受けて reviewer が checked と再判定する (2) 該当範囲を分割して本 PR のスコープから除外する (3) 該当機能が default-off / feature flag で隔離されていることを確認して checked と再判定する（有効化条件は人間確認事項へ）。いずれも成立しない場合は仮承認を保留し、main に「人間回答が必要」「分割が必要」「隔離が必要」のいずれかを返す（main は G5 の引き継ぎステータスで確定できる）。
+- safety・migration・security 以外の unchecked は仮承認を妨げない。main が PR description の「人間に確認してほしいこと」へ転記する。
 
 ## evidence matrix 突合基準
 
@@ -67,5 +67,6 @@ worker の evidence matrix の各行について:
 ## severity と閉じる条件
 
 - severity 基準: must-fix = 受け入れ条件違反、または発生条件を特定できる証明可能な欠陥（データ破壊・レース・セキュリティ・互換性・情報露出・設計欠陥）。should = 受け入れ条件は満たすが品質・保守性に実害がある。nit = 好みや微細な改善。
-- 各 must-fix には「閉じる条件」を必ず書く: 修正後に成立しているべき不変条件と、テストが証明すべき境界。
-- must-fix を 1 件見つけたら問題クラスとして一般化し、同じクラスの他のインスタンス（他の層・経路・出力先）を grep と call graph 追跡で列挙して、確認した同根 call site 一覧とともに 1 つの指摘グループとして報告する。
+- 各 must-fix には**有限の「閉じる条件」**を必ず書く: sweep で確認した対象（call site / failure point / 出力先）を列挙して ID を振った inventory と、各 ID の修正を証明する観測（テスト名またはコマンド）。「全〜」「〜など」の開いた表現だけで閉じる条件を書かない。inventory に含めなかった経路は閉じる条件に含まれない（後から見つけた場合は reopen ではなく新規指摘として扱う）。
+- must-fix を 1 件見つけたら問題クラスとして一般化し、同じクラスの他のインスタンス（他の層・経路・出力先）を grep と call graph 追跡で列挙して、1 つの指摘グループとして報告する。この sweep で確認した一覧がそのまま閉じる条件の inventory になる。
+- 再レビューでは各 must-fix を inventory ID 単位で CLOSED / PARTIAL（未充足 ID を列挙）/ NEW と判定し、同一指摘の要求を拡張しない。
