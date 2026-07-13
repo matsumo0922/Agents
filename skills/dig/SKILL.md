@@ -138,7 +138,7 @@ main agent は質問案を構造化質問ツールでユーザーに提示する
 ### Claude Code
 
 - 構造化質問は AskUserQuestion。1回の呼び出しで最大4問だが、本スキルでは2〜3問に抑える。header は12文字以内。
-- 分析サブエージェントは Agent tool で spawn し、初回は高めの effort を指定する。2ラウンド目以降は SendMessage で同じサブエージェントを継続し（コンテキスト維持）、差分分析なので effort を下げてよい。プラン全文と参照仕様を読む長文脈役のため、最軽量ティアのモデルには切り替えない。
+- 分析サブエージェントは Agent tool で spawn する（effort は per-spawn 指定不可で session 既定を継承する）。2ラウンド目以降は SendMessage で同じサブエージェントを継続する（コンテキスト維持。継続では model / effort を変更できない）。プラン全文と参照仕様を読む長文脈役のため、最軽量ティアのモデルを使わない。
 - 選択肢に具体的なコード案やレイアウト案を並べて比較させる場合のみ、option の preview を使う。
 - plan mode 中に呼ばれた場合は、ExitPlanMode でプランを提示する前に dig を実行し、決定をプランに反映してから提示する。
 - このスキルを Agent tool 経由のサブエージェントとして実行しない（AskUserQuestion がユーザーに届かない）。

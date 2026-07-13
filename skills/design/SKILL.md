@@ -126,7 +126,7 @@ rubric の職掌 4 点（反例列挙 / matrix 発動判定の妥当性 / スコ
 
 ### Claude Code
 
-- architect / falsifier = Fable 5（`effort: high`）。質問反映の継続は SendMessage で行い、再 spawn しない。falsifier は新規 spawn する（clean context のため継続にしない）。
+- architect / falsifier = Fable 5（`model` パラメータで指定）。effort は per-spawn で指定できず session 既定を継承する（役割別に固定したい場合は `.claude/agents/` の role 別エージェント定義で指定する）。質問反映の継続は SendMessage で行い、再 spawn しない（継続では model / effort を変更できない）。falsifier は新規 spawn する（clean context のため継続にしない）。
 - main agent は role 別 reference（design-contract.md 等）を読まず、絶対パスへ解決してサブエージェント指示に埋め込む。
 - 構造化質問は AskUserQuestion。1 回の呼び出しで最大 4 問だが、本スキルでは 2〜3 問に抑える。
 - plan mode 中に呼ばれた場合は、ExitPlanMode でプランを提示する前に設計を確定し、プランへ反映する。
@@ -136,8 +136,8 @@ rubric の職掌 4 点（反例列挙 / matrix 発動判定の妥当性 / スコ
 ### Codex
 
 - main agent = `gpt-5.6-sol`（`model_reasoning_effort = "medium"`、`plan_mode_reasoning_effort = "high"`）を推奨する。
-- architect / falsifier = `gpt-5.6-sol`（`model_reasoning_effort = "xhigh"`）。読み込み中心のため組み込みの explorer エージェントが向く。falsifier は `fork_turns = "none"` で clean context にする。
-- Codex の skill runtime 規則（SKILL.md が必須参照する resource にサブエージェントが従う場合、main もその reference を読む）に従い、main はその run で必要になった reference（設計契約等）を読んでよい。読む対象を role 別 reference に絞り、不要な reference を読まない。
+- architect / falsifier = `gpt-5.6-sol`（`model_reasoning_effort = "xhigh"`）。読み込み中心のため組み込みの explorer エージェントが向く。falsifier は clean context で spawn する（確認済みの指定は `fork_turns = "none"`。fork 制御のパラメータ名・値域は実行環境で確認する）。
+- Codex では、本 bundle の運用規約として main もその run で必要になった reference（設計契約等）を読んでよい（実行環境が必須 reference の読み込みを要求する場合はそれに従う）。読む対象を role 別 reference に絞り、不要な reference を読まない。
 - 構造化質問は request_user_input（1〜3 問）。
 - dig の起動は `$dig` 参照で行い、使えない場合は `~/.codex/skills/dig/SKILL.md` を読み込んで従う。
 - `/goal` 自走中はこのスキルを使わない（対話質問ができない）。自走中に設計が無い場合は issue-pr-autopilot の設計ゲートが代替する。
