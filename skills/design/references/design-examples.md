@@ -38,9 +38,11 @@
 
 ## 反証
 
-> - ベクトル 3 の反例: `fetchStats()` を fail-closed 化すると、呼び出し元 `ReconcilerWorker.runPass()` が例外を warn で握って pass 全体を skip し、保護処理が停止する（`ReconcilerWorker.kt` の catch 節）→ 処置: 例外を failure transition へ伝播し、保護処理は継続する設計に修正済み。
-> - ベクトル 4 の反例: baseline 不一致中の全 write 拒否は、STOP/TP・手動 close という risk-reducing write まで塞ぐ → 処置: 拒否は entry（risk-increasing）に限定し、exit 系は監査付きで許可する設計に修正済み。
-> - ベクトル 1・2・5: 探索した結果反例なし。
+> - ベクトル 3 の反例（**blocking**: 保護処理の停止 = safety 欠陥）: `fetchStats()` を fail-closed 化すると、呼び出し元 `ReconcilerWorker.runPass()` が例外を warn で握って pass 全体を skip し、保護処理が停止する（`ReconcilerWorker.kt` の catch 節）→ 処置: 例外を failure transition へ伝播し、保護処理は継続する設計に修正。**修正後、独立 falsifier が解消を再確認済み**。
+> - ベクトル 4 の反例（**blocking**: risk-reducing 経路の封鎖 = safety 欠陥）: baseline 不一致中の全 write 拒否は、STOP/TP・手動 close という risk-reducing write まで塞ぐ → 処置: 拒否は entry（risk-increasing）に限定し、exit 系は監査付きで許可する設計に修正。**修正後、独立 falsifier が解消を再確認済み**。
+> - ベクトル 5 の反例（non-blocking: 明示した residual risk）: 評価 query が index 不在で低速化し得る → 処置: 受容。non-functional contract に未測定として測定方法・fail-safe 上限・deploy 後確認を記載。
+> - ベクトル 1・2: 探索した結果反例なし。
+> - 未解消の blocking: 0 件。
 
 ## 状態遷移 matrix（抜粋）
 

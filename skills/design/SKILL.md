@@ -102,7 +102,7 @@ rubric の職掌 4 点（反例列挙 / matrix 発動判定の妥当性 / スコ
 </falsifier_instruction>
 ```
 
-- **いずれにも該当しない場合**: 同一 architect に、falsifier-rubric.md に従った自己反証を別ターンで依頼する。
+- **いずれにも該当しない場合**: 同一 architect に、falsifier-rubric.md に従った自己反証を別ターンで依頼する。自己反証で blocking 反例が 1 件でも出た場合は独立反証に昇格する: main が clean context の falsifier を spawn し、修正後の解消確認もその falsifier が行う。
 - main agent は falsification_result を architect に渡し、architect が rubric の処置ルールに従って各反例を処置し、blocking / non-blocking 区分とともにドラフトの「反証」セクションへ記録する。**blocking 反例は architect 単独の「受容 + 理由」で閉じられない**: 設計を修正して同じ falsifier に再確認させるか、構造化質問でユーザーが要件・リスク許容を明示変更するまで残る。non-blocking のみ architect が処置を決めてよい。matrix 発動判定・スコープ判定の誤りが指摘された場合は該当セクションを修正する。反証で新たに要質問の論点（価値判断）が生じた場合は Phase 3 の残ラウンドで確定させる。
 
 ## Phase 4: 設計確定（G1）
