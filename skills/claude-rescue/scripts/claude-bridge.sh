@@ -86,7 +86,7 @@ TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/claude-bridge.XXXXXX")" || exit 3
 trap 'rm -rf "$TMP_DIR"' EXIT INT TERM HUP
 
 # 応答 JSON を一括検証し、result 本文とメタ情報をファイルへ書き出す。
-# 契約: type == "result" / is_error == false / permission_denials 空 /
+# 契約: type == "result" / is_error == false (bool) / permission_denials が空の list /
 #       result が文字列 / session_id 非空 / cost・duration が数値。
 # 違反時は理由を stderr に出して非ゼロで返る。
 validate_response() {
@@ -108,16 +108,21 @@ except Exception:
 if not isinstance(d, dict) or d.get("type") != "result":
     fail("response type is not 'result'")
 
-if d.get("is_error"):
+is_error = d.get("is_error")
+if is_error:
     status = d.get("api_error_status")
     if status is not None:
         print(f"api_error_status={status}", file=sys.stderr)
     body = d.get("result")
     if isinstance(body, str) and body:
         print(body, file=sys.stderr)
-    fail("is_error=true")
+    fail("is_error is truthy")
+if is_error is not False:
+    fail("is_error is not false")
 
 denials = d.get("permission_denials")
+if not isinstance(denials, list):
+    fail("permission_denials is not a list")
 if denials:
     fail("permission_denials is not empty: "
          + json.dumps(denials, ensure_ascii=False)[:2000])

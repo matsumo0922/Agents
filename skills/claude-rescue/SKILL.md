@@ -36,26 +36,29 @@ scripts/claude-bridge.sh <instruction-file> [--model <model>] [--effort <level>]
 
 ### 例: diff レビューを依頼して round 2 で追記する
 
-レビュー対象の diff は呼び出し側が事前にファイルへ書き出し、instruction から参照させる(Claude に Bash を渡さないため)。
+レビュー対象の diff は呼び出し側が事前にファイルへ書き出し、instruction から参照させる(Claude に Bash を渡さないため)。作業ファイルは cwd 配下の一時ディレクトリに置き、終了時に削除して worktree を汚さない。
 
 ```bash
-git diff main..HEAD > review-target.diff
+work_dir="$(mktemp -d ./claude-rescue-work.XXXXXX)"
+trap 'rm -rf "$work_dir"' EXIT
 
-cat > review-instruction.md <<'EOF'
-review-target.diff の diff をレビューし、must-fix / should / nits に分類して
+git diff main...HEAD > "$work_dir/review-target.diff"
+
+cat > "$work_dir/review-instruction.md" <<EOF
+$work_dir/review-target.diff の diff をレビューし、must-fix / should / nits に分類して
 <review_result>...</review_result> ブロックで報告せよ。
 EOF
 
-scripts/claude-bridge.sh review-instruction.md --expect review_result 2>meta.txt
-session_id="$(grep '^session_id=' meta.txt | cut -d= -f2)"
+scripts/claude-bridge.sh "$work_dir/review-instruction.md" --expect review_result 2>"$work_dir/meta.txt"
+session_id="$(grep '^session_id=' "$work_dir/meta.txt" | cut -d= -f2)"
 
-git diff main..HEAD > review-target.diff
+git diff main...HEAD > "$work_dir/review-target.diff"
 
-cat > round2.md <<'EOF'
-指摘 M-1 と M-2 を修正した(commit abc1234)。review-target.diff を再レビューし、同じ形式で報告せよ。
+cat > "$work_dir/round2.md" <<EOF
+指摘 M-1 と M-2 を修正した(commit abc1234)。$work_dir/review-target.diff を再レビューし、同じ形式で報告せよ。
 EOF
 
-scripts/claude-bridge.sh round2.md --resume "$session_id" --expect review_result
+scripts/claude-bridge.sh "$work_dir/round2.md" --resume "$session_id" --expect review_result
 ```
 
 ## 環境知識
