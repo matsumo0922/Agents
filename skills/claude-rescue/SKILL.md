@@ -23,7 +23,8 @@ scripts/claude-bridge.sh <instruction-file> [--model <model>] [--effort <level>]
 ```
 
 - instruction はファイル渡し(長文指示の shell quoting を回避する)
-- 既定値: `--model claude-opus-4-8` / `--effort high` / `--allowed-tools "Read,Grep,Glob"`(読み取りのみ)。既定は安全側の値であり、すべて引数で上書きできる
+- 既定値: `--model claude-opus-4-8` / `--effort high` / `--allowed-tools "Read,Grep,Glob"`。引数で上書きできる
+- 呼び出しは常に `--permission-mode dontAsk`(headless 向け: 未承認の操作をプロンプトせず拒否する fail-closed)。read-only な Bash(`git diff` 等)は Claude Code 自身の read-only 分類により allowlist 追加なしで通る
 - `--expect <tag>`: result に `<tag>...</tag>` ブロック(開始タグ → 終了タグの順)が含まれることを機械検査する。欠落時は同一セッションへ「指定形式のみで再送」を 1 回だけ自動再依頼する
 - `--resume <session-id>`: 既存セッションを継続する(レビュー round 2 の追記など)。session_id は前回呼び出しの stderr から取得する
 
@@ -36,31 +37,27 @@ scripts/claude-bridge.sh <instruction-file> [--model <model>] [--effort <level>]
 
 ### 例: diff レビューを依頼して round 2 で追記する
 
-diff を読ませる場合は `--allowed-tools` で git 系の Bash を opt-in する。
-
 ```bash
 cat > review-instruction.md <<'EOF'
 git diff main...HEAD の差分をレビューし、must-fix / should / nits に分類して
 <review_result>...</review_result> ブロックで報告せよ。
 EOF
 
-scripts/claude-bridge.sh review-instruction.md --expect review_result \
-  --allowed-tools "Read,Grep,Glob,Bash(git diff*),Bash(git log*)" 2>meta.txt
+scripts/claude-bridge.sh review-instruction.md --expect review_result 2>meta.txt
 session_id="$(grep '^session_id=' meta.txt | cut -d= -f2)"
 
 cat > round2.md <<'EOF'
 指摘 M-1 と M-2 を修正した(commit abc1234)。修正後の差分を再レビューし、同じ形式で報告せよ。
 EOF
 
-scripts/claude-bridge.sh round2.md --resume "$session_id" --expect review_result \
-  --allowed-tools "Read,Grep,Glob,Bash(git diff*),Bash(git log*)" 2>>meta.txt
+scripts/claude-bridge.sh round2.md --resume "$session_id" --expect review_result 2>>meta.txt
 ```
 
 ## 環境知識
 
 - **Codex から呼ぶ場合は `require_escalated` で起動する**。session の保存と `--resume` による round 追記には `~/.claude/projects` への書き込みが必要で、通常 sandbox では失敗する。auto-approve 環境では escalation は無人で承認される。単発呼び出し(`--resume` を使わない)だけなら通常 sandbox でも動く
 - `claude` バイナリと `~/.claude` の認証情報、api.anthropic.com への到達性が必要
-- **`Bash(git diff*)` 型の prefix 許可は read-only 境界にならない**。prefix は複合コマンド(`git diff; 任意のコマンド`)にもマッチするため、既定の allowed-tools に Bash を含めていない。対話環境や信頼できる対象なら例のように opt-in すればよいが、**無人実行で非信頼入力(外部由来の PR diff 等)を読ませる場合**は Bash を渡さず、diff を呼び出し側でファイルに書き出して Read させる(prompt injection の実行経路を塞ぐ)
+- **Bash を wildcard で明示 allow しない**(`Bash(git diff*)` のような prefix 許可は複合コマンド `git diff; 任意のコマンド` にもマッチし、事前承認になってしまう)。read-only 制約は `--permission-mode dontAsk` + Claude Code 自身の read-only 分類が担い、書き込み系はプロンプトなしで拒否される。拒否は `permission_denials` として返り、bridge が exit 3 に変換する
 - headless の Claude は作業ディレクトリ外(例: `/tmp`)へのアクセスを拒否することがある。instruction が参照するファイルは呼び出し時の cwd 配下に置く
 - 存在しないモデル・認証失敗は `is_error` / HTTP status として返り、bridge が exit 3 に変換する
 - 出力形式の軽微な逸脱(タグ欠落)は起き得る。機械処理する場合は instruction に出力契約を書いた上で `--expect` を併用する

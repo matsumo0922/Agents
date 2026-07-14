@@ -19,8 +19,9 @@ MODEL="claude-opus-4-8"
 EFFORT="high"
 RESUME=""
 EXPECT=""
-# 既定はツール実行なしの読み取りのみ。Bash は prefix 許可(例: Bash(git diff*))が
-# 複合コマンド(git diff; ...)にもマッチして read-only 境界にならないため、既定に含めない。
+# Bash は明示 allow しない。read-only な Bash(git diff 等)の可否は
+# --permission-mode dontAsk 下で Claude Code 自身の read-only 分類に委ねる
+# (wildcard の Bash allow は複合コマンドまで事前承認してしまうため使わない)。
 ALLOWED_TOOLS="Read,Grep,Glob"
 
 usage() {
@@ -155,7 +156,8 @@ run_claude() {
   resume_id="$2"
   out_file="$3"
 
-  set -- -p --model "$MODEL" --effort "$EFFORT" --output-format json --allowedTools "$ALLOWED_TOOLS"
+  set -- -p --model "$MODEL" --effort "$EFFORT" --output-format json \
+    --permission-mode dontAsk --allowedTools "$ALLOWED_TOOLS"
   if [ -n "$resume_id" ]; then
     set -- "$@" --resume "$resume_id"
   fi

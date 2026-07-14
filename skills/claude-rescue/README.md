@@ -23,7 +23,7 @@ scripts/claude-bridge.sh <instruction-file> [--model <model>] [--effort <level>]
                          [--resume <session-id>] [--expect <tag>] [--allowed-tools <list>]
 ```
 
-既定値は `--model claude-opus-4-8` / `--effort high` / `--allowed-tools "Read,Grep,Glob"`（読み取りのみ。Bash の prefix 許可は複合コマンドにもマッチして read-only 境界にならないため、既定に含めません）です。すべて引数で上書きできます。詳細な使い方と環境知識（Codex では `require_escalated` が必要、など）は [SKILL.md](SKILL.md) を参照してください。
+既定値は `--model claude-opus-4-8` / `--effort high` / `--allowed-tools "Read,Grep,Glob"` で、引数で上書きできます。呼び出しは常に `--permission-mode dontAsk`（headless 向けの fail-closed。read-only な Bash は Claude Code 自身の read-only 分類で通り、書き込み系はプロンプトなしで拒否されます）。詳細な使い方と環境知識（Codex では `require_escalated` が必要、など）は [SKILL.md](SKILL.md) を参照してください。
 
 ## 依存
 
