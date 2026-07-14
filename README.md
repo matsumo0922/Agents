@@ -26,6 +26,11 @@ skills/
     references/
       review-rubric.md
     agents/openai.yaml
+  claude-rescue/
+    SKILL.md
+    README.md
+    scripts/
+      claude-bridge.sh
 docs/
   pipeline-forward-tests.md
   codex-local-setup.md
@@ -133,5 +138,9 @@ make unlink-project PROJECT=~/dev/App/OneNavi
 - [dig](skills/dig/README.md): プランの暗黙の前提と未検討リスクを、構造化質問の反復インタビューで掘り起こすためのスキル。Decisions は design が要件・事実・仮定として引き継ぎます。
 - [design](skills/design/README.md): 実装前の設計を architect サブエージェント・独立反証（falsifier）・構造化質問で設計契約準拠に確定し、issue の「## 設計」として投稿するためのスキル。
 - [issue-pr-autopilot](skills/issue-pr-autopilot/README.md): issue や作業説明を起点に、設計ゲート・worktree 実装・evidence 受理ゲート・2 パスレビュー・cycle 計測付きで PR 作成からレビュー反復まで自走させるためのスキル。
+
+パイプラインとは独立に、単体で使える汎用スキルも管理します。
+
+- [claude-rescue](skills/claude-rescue/README.md): 任意の環境から Claude を headless（`claude -p`）で呼び出し、構造化された結果を受け取る汎用ブリッジ。Claude サブエージェントを持たない環境（Codex 等）からのレビュー・反証依頼に使います。
 
 パイプラインの forward test は [docs/pipeline-forward-tests.md](docs/pipeline-forward-tests.md) に定義し、スキル改訂時に実行結果の証拠を記録します。
