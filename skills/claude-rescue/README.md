@@ -12,7 +12,8 @@
 
 - **機構のみを提供**: エントリポイントは `scripts/claude-bridge.sh` の 1 つだけ。依頼内容は instruction ファイルが決め、モデル選定やエスカレーションの政策は利用側が持つ
 - **exit code 契約**: `0` = 成功 / `2` = 形式違反 / `3` = 不通。stdout = result 本文、stderr = メタ情報(session_id / cost_usd / duration_ms)で、利用側は JSON 解析なしで分岐できる
-- **`--expect` による形式保証**: result に指定タグのブロックが含まれることを機械検査し、欠落時は同一セッションへ 1 回だけ自動再依頼する
+- **応答の一括検証**: `type`・`is_error`・`permission_denials`・必須フィールドの型を検査し、permission denial を含む不完全な応答は成功にしない(exit 3)
+- **`--expect` による形式保証**: result に指定タグのブロック(開始タグ → 終了タグの順)が含まれることを機械検査し、欠落時は同一セッションへ 1 回だけ自動再依頼する
 - **`--resume` によるセッション継続**: レビュー round 2 の追記など、同一文脈での往復に対応する
 
 ## インターフェース
@@ -22,7 +23,7 @@ scripts/claude-bridge.sh <instruction-file> [--model <model>] [--effort <level>]
                          [--resume <session-id>] [--expect <tag>] [--allowed-tools <list>]
 ```
 
-既定値は `--model claude-opus-4-8` / `--effort high` / read-only の allowed-tools 一式です。すべて引数で上書きできます。詳細な使い方と環境知識(Codex では `require_escalated` が必要、など)は [SKILL.md](SKILL.md) を参照してください。
+既定値は `--model claude-opus-4-8` / `--effort high` / `--allowed-tools "Read,Grep,Glob"`（読み取りのみ。Bash の prefix 許可は複合コマンドにもマッチして read-only 境界にならないため、既定に含めません）です。すべて引数で上書きできます。詳細な使い方と環境知識（Codex では `require_escalated` が必要、など）は [SKILL.md](SKILL.md) を参照してください。
 
 ## 依存
 

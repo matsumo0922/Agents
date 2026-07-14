@@ -23,37 +23,46 @@ scripts/claude-bridge.sh <instruction-file> [--model <model>] [--effort <level>]
 ```
 
 - instruction はファイル渡し(長文指示の shell quoting を回避する)
-- 既定値: `--model claude-opus-4-8` / `--effort high` / `--allowed-tools "Read,Grep,Glob,Bash(git diff*),Bash(git log*),Bash(git rev-parse*)"`(read-only 一式)。既定は安全側の値であり、すべて引数で上書きできる
-- `--expect <tag>`: result に `<tag>...</tag>` ブロックが含まれることを機械検査する。欠落時は同一セッションへ「指定形式のみで再送」を 1 回だけ自動再依頼する
+- 既定値: `--model claude-opus-4-8` / `--effort high` / `--allowed-tools "Read,Grep,Glob"`(読み取りのみ)。既定は安全側の値であり、すべて引数で上書きできる
+- `--expect <tag>`: result に `<tag>...</tag>` ブロック(開始タグ → 終了タグの順)が含まれることを機械検査する。欠落時は同一セッションへ「指定形式のみで再送」を 1 回だけ自動再依頼する
 - `--resume <session-id>`: 既存セッションを継続する(レビュー round 2 の追記など)。session_id は前回呼び出しの stderr から取得する
 
 ### 出力契約
 
 - stdout = result 本文
 - stderr = メタ情報(`session_id=` / `cost_usd=` / `duration_ms=` の KEY=value 行と診断メッセージ)
-- exit code: `0` = 成功 / `2` = 形式違反(リトライ後も `--expect` タグ不成立。result は stdout に出力済み) / `3` = 不通(claude コマンド失敗・JSON 解析不能・`is_error`)。利用側は exit code だけで分岐できる
+- exit code: `0` = 成功 / `2` = 形式違反(リトライ後も `--expect` タグブロック不成立。result は stdout に出力済み) / `3` = 不通(引数不正・claude コマンド失敗・応答の契約違反・permission denial・`is_error`)。利用側は exit code だけで分岐できる
+- 応答は一括検証される: `type == "result"`・`is_error == false`・`permission_denials` が空・result / session_id / cost / duration の型。**permission denial は exit 3**(必要なファイルを読めなかった不完全な結果を成功として採用しないため)
 
 ### 例: diff レビューを依頼して round 2 で追記する
 
+レビュー対象の diff は呼び出し側が事前にファイルへ書き出し、instruction から参照させる(Claude に Bash を渡さないため)。
+
 ```bash
-cat > /tmp/review-instruction.md <<'EOF'
-このリポジトリの main..HEAD の diff をレビューし、must-fix / should / nits に分類して
+git diff main..HEAD > review-target.diff
+
+cat > review-instruction.md <<'EOF'
+review-target.diff の diff をレビューし、must-fix / should / nits に分類して
 <review_result>...</review_result> ブロックで報告せよ。
 EOF
 
-scripts/claude-bridge.sh /tmp/review-instruction.md --expect review_result 2>meta.txt
+scripts/claude-bridge.sh review-instruction.md --expect review_result 2>meta.txt
 session_id="$(grep '^session_id=' meta.txt | cut -d= -f2)"
 
-cat > /tmp/round2.md <<'EOF'
-指摘 M-1 と M-2 を修正した(commit abc1234)。修正後の diff を再レビューし、同じ形式で報告せよ。
+git diff main..HEAD > review-target.diff
+
+cat > round2.md <<'EOF'
+指摘 M-1 と M-2 を修正した(commit abc1234)。review-target.diff を再レビューし、同じ形式で報告せよ。
 EOF
 
-scripts/claude-bridge.sh /tmp/round2.md --resume "$session_id" --expect review_result
+scripts/claude-bridge.sh round2.md --resume "$session_id" --expect review_result
 ```
 
 ## 環境知識
 
 - **Codex から呼ぶ場合は `require_escalated` で起動する**。session の保存と `--resume` による round 追記には `~/.claude/projects` への書き込みが必要で、通常 sandbox では失敗する。auto-approve 環境では escalation は無人で承認される。単発呼び出し(`--resume` を使わない)だけなら通常 sandbox でも動く
 - `claude` バイナリと `~/.claude` の認証情報、api.anthropic.com への到達性が必要
+- **`Bash(git diff*)` 型の prefix 許可は read-only 境界にならない**。prefix は複合コマンド(`git diff; 任意のコマンド`)にもマッチするため、非信頼入力(PR diff 等)を読ませる用途では prompt injection の実行経路になる。既定の allowed-tools に Bash を含めないのはこのためで、diff 等は呼び出し側がファイルへ書き出して渡す
+- headless の Claude は作業ディレクトリ外(例: `/tmp`)へのアクセスを拒否することがある。instruction が参照するファイルは呼び出し時の cwd 配下に置く
 - 存在しないモデル・認証失敗は `is_error` / HTTP status として返り、bridge が exit 3 に変換する
 - 出力形式の軽微な逸脱(タグ欠落)は起き得る。機械処理する場合は instruction に出力契約を書いた上で `--expect` を併用する
