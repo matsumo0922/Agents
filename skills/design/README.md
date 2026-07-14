@@ -2,7 +2,7 @@
 
 GitHub issue や作業説明を起点に、実装前の設計を確定するためのスキルです。要件の言い換えではなく構造の決定（新規コンポーネントの居場所と責務、ファイル単位の変更マップ、状態遷移・境界の決定）を行い、issue-pr-autopilot にそのまま渡せる設計契約準拠の「## 設計」を作ります。ユーザーの指示があった場合は issue に投稿します。
 
-dig / design / issue-pr-autopilot は 1 つのパイプライン bundle として配布されます（`make link` で一括リンク）。単体配布はサポートしません。
+dig / design / issue-pr-autopilot / claude-rescue は 1 つのパイプライン bundle として配布されます（`make link` で一括リンク）。単体配布はサポートしません。claude-rescue は Claude サブエージェントを持たない環境（Codex 等）で falsifier を呼び出すブリッジです。
 
 ## 使いどころ
 

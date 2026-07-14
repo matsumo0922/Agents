@@ -38,16 +38,16 @@ issue-pr-autopilot の reviewer が round 1 で使う。設計形式の定義は
 
 ## review point matrix の形式
 
-review_result に、全 review point（反証 5 ベクトル + pass 2 の観点 + 設計の「レビュー観点」の各項目）の checked / unchecked を返す。
+review_result に、全 review point（反証 5 ベクトル + pass 2 の観点 + 設計の「レビュー観点」の各項目）の checked / unchecked / isolated_unverified を返す。
 
 ```text
 <review_point_matrix>
 | review point | 結果 | 備考 |
 |---|---|---|
 | 反証ベクトル 1〜5（各行） | checked / unchecked / isolated_unverified | unchecked は理由必須 |
-| call graph 追跡 | checked / unchecked | |
-| evidence 突合 | checked / unchecked | |
-| 設計のレビュー観点の各項目 | checked / unchecked | |
+| call graph 追跡 | checked / unchecked / isolated_unverified | |
+| evidence 突合 | checked / unchecked / isolated_unverified | |
+| 設計のレビュー観点の各項目 | checked / unchecked / isolated_unverified | |
 </review_point_matrix>
 ```
 
@@ -67,7 +67,8 @@ worker の evidence matrix の各行について:
 
 ## severity と閉じる条件
 
-- severity 基準: must-fix = 受け入れ条件違反、または発生条件を特定できる証明可能な欠陥（データ破壊・レース・セキュリティ・互換性・情報露出・設計欠陥）。should = 受け入れ条件は満たすが品質・保守性に実害がある。nit = 好みや微細な改善。
+- **意図アンカー**: 各指摘に「issue の受け入れ条件・設計 invariant のどれを守るための指摘か」の紐付けを付ける。must-fix はアンカー + 閉じる条件が揃って初めて成立する。アンカーを付けられない指摘は内容の正しさに関わらず must-fix にせず、follow-up 提案として分類して報告する。
+- severity 基準: must-fix = 受け入れ条件違反、または発生条件を特定できる証明可能な欠陥（データ破壊・レース・セキュリティ・互換性・情報露出・設計欠陥）。should = 受け入れ条件は満たすが品質・保守性に実害がある。nit = 好みや微細な改善で、**既定処置は「対応不要（記録のみ）」**。
 - 各 must-fix には**有限の「閉じる条件」**を必ず書く: sweep で確認した対象（call site / failure point / 出力先）を列挙して ID を振った inventory と、各 ID の修正を証明する観測（テスト名またはコマンド）。「全〜」「〜など」の開いた表現だけで閉じる条件を書かない。inventory に含めなかった経路は閉じる条件に含まれない（後から見つけた場合は reopen ではなく新規指摘として扱う）。
 - must-fix を 1 件見つけたら問題クラスとして一般化し、同じクラスの他のインスタンス（他の層・経路・出力先）を grep と call graph 追跡で列挙して、1 つの指摘グループとして報告する。この sweep で確認した一覧がそのまま閉じる条件の inventory になる。
 - 再レビューでは各 must-fix を inventory ID 単位で CLOSED / PARTIAL（未充足 ID を列挙）/ NEW と判定し、同一指摘の要求を拡張しない。

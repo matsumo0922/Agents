@@ -73,14 +73,14 @@ dig → design → issue-pr-autopilot パイプライン（設計契約・ゲー
 
 | # | チェック | 観測方法 |
 |---|---|---|
-| 3-1 | 全 must-fix に ID 付き有限 inventory と閉じる条件が付き、「全〜」「〜など」だけの閉じる条件が無い | round 1 の review_result |
+| 3-1 | 全 must-fix に意図アンカー（対応する受け入れ条件・invariant）と ID 付き有限 inventory・閉じる条件が付き、「全〜」「〜など」だけの閉じる条件が無い | round 1 の review_result |
 | 3-2 | 再レビューが inventory ID 単位の CLOSED / PARTIAL / NEW 判定のみで、同一指摘の要求拡張が無い | round 2 の review_result |
-| 3-3 | 設計レベルの欠陥が designer に差し戻され、修正規模見積りが予算ゲートに触れる場合は stage-out（default-off 隔離 + follow-up issue 提案）が選ばれる | 対応表と issue コメント |
+| 3-3 | 設計レベルの欠陥が designer に差し戻され、修正に新 layer・新規サブシステムの追加を要する場合は stage-out（default-off 隔離 + follow-up issue 提案）が選ばれる | 対応表と issue コメント |
 | 3-4 | 環境依存挙動への指摘が targeted テスト 1 本 + deploy 後確認の証明 tier で閉じ、flaky テストの反復修正が発生しない | 検証台帳と commit 履歴 |
-| 3-5 | 予算ゲートの構造条件（PARTIAL ×2 / inventory 外への拡張継続 / 新 layer）のいずれかが発動した場合、修正を積まずに HANDOFF へ分岐し、最終コメントが承認と区別されている | 計測ログと最終コメント |
-| 3-8 | scope-growth（diff 2 倍 + 500 行超）と SLO 通知（120 分）がシグナルとして記録され、単独では停止していない | 計測ログ |
-| 3-6 | 内部レビューが 1 cycle 最大 2 round で終わり、round が新 cycle に誤分類されない | 計測ログの cycle 表（トリガー記載付き） |
-| 3-7 | 旧版比の wall-clock / round 数が改善している（同一 fixture の旧 skill 実行と比較） | cycle 表の時間 4 区分 |
+| 3-5 | 意図アンカーを付けられない指摘が must-fix にならず follow-up 提案に分類され、nit が「対応不要（記録のみ）」のまま修正 diff に混入しない | review_result・対応表・diff |
+| 3-6 | HANDOFF の発火が「収束停滞（未解消 must-fix 数が減らない・PARTIAL 反復・inventory 外拡張の継続）」または「人間専権」に限られ、判定根拠が計測ログに記録され、最終コメントが承認と区別されている | 計測ログと最終コメント |
+| 3-7 | round が新 cycle に誤分類されず、収束している限り round 数による打ち切りが発生しない（round ごとの未解消 must-fix 数の推移が記録されている） | 計測ログの cycle 表（トリガー記載付き） |
+| 3-8 | designer / worker の規模申告が設計・完了報告・計測ログに記録され、自動停止に使われていない。cycle 表に時間 4 区分と実行対象の skill 版（commit SHA）が記録されている | 設計・完了報告・計測ログ |
 
 ## 実行結果の証拠
 
