@@ -36,36 +36,31 @@ scripts/claude-bridge.sh <instruction-file> [--model <model>] [--effort <level>]
 
 ### 例: diff レビューを依頼して round 2 で追記する
 
-レビュー対象の diff は呼び出し側が事前にファイルへ書き出し、instruction から参照させる(Claude に Bash を渡さないため)。作業ファイルは cwd 配下の一時ディレクトリに置き、終了時に削除して worktree を汚さない。
+diff を読ませる場合は `--allowed-tools` で git 系の Bash を opt-in する。
 
 ```bash
-work_dir="$(mktemp -d ./claude-rescue-work.XXXXXX)"
-trap 'rm -rf "$work_dir"' EXIT
-
-git diff main...HEAD > "$work_dir/review-target.diff"
-
-cat > "$work_dir/review-instruction.md" <<EOF
-$work_dir/review-target.diff の diff をレビューし、must-fix / should / nits に分類して
+cat > review-instruction.md <<'EOF'
+git diff main...HEAD の差分をレビューし、must-fix / should / nits に分類して
 <review_result>...</review_result> ブロックで報告せよ。
 EOF
 
-scripts/claude-bridge.sh "$work_dir/review-instruction.md" --expect review_result 2>"$work_dir/meta.txt"
-session_id="$(grep '^session_id=' "$work_dir/meta.txt" | cut -d= -f2)"
+scripts/claude-bridge.sh review-instruction.md --expect review_result \
+  --allowed-tools "Read,Grep,Glob,Bash(git diff*),Bash(git log*)" 2>meta.txt
+session_id="$(grep '^session_id=' meta.txt | cut -d= -f2)"
 
-git diff main...HEAD > "$work_dir/review-target.diff"
-
-cat > "$work_dir/round2.md" <<EOF
-指摘 M-1 と M-2 を修正した(commit abc1234)。$work_dir/review-target.diff を再レビューし、同じ形式で報告せよ。
+cat > round2.md <<'EOF'
+指摘 M-1 と M-2 を修正した(commit abc1234)。修正後の差分を再レビューし、同じ形式で報告せよ。
 EOF
 
-scripts/claude-bridge.sh "$work_dir/round2.md" --resume "$session_id" --expect review_result
+scripts/claude-bridge.sh round2.md --resume "$session_id" --expect review_result \
+  --allowed-tools "Read,Grep,Glob,Bash(git diff*),Bash(git log*)" 2>>meta.txt
 ```
 
 ## 環境知識
 
 - **Codex から呼ぶ場合は `require_escalated` で起動する**。session の保存と `--resume` による round 追記には `~/.claude/projects` への書き込みが必要で、通常 sandbox では失敗する。auto-approve 環境では escalation は無人で承認される。単発呼び出し(`--resume` を使わない)だけなら通常 sandbox でも動く
 - `claude` バイナリと `~/.claude` の認証情報、api.anthropic.com への到達性が必要
-- **`Bash(git diff*)` 型の prefix 許可は read-only 境界にならない**。prefix は複合コマンド(`git diff; 任意のコマンド`)にもマッチするため、非信頼入力(PR diff 等)を読ませる用途では prompt injection の実行経路になる。既定の allowed-tools に Bash を含めないのはこのためで、diff 等は呼び出し側がファイルへ書き出して渡す
+- **`Bash(git diff*)` 型の prefix 許可は read-only 境界にならない**。prefix は複合コマンド(`git diff; 任意のコマンド`)にもマッチするため、既定の allowed-tools に Bash を含めていない。対話環境や信頼できる対象なら例のように opt-in すればよいが、**無人実行で非信頼入力(外部由来の PR diff 等)を読ませる場合**は Bash を渡さず、diff を呼び出し側でファイルに書き出して Read させる(prompt injection の実行経路を塞ぐ)
 - headless の Claude は作業ディレクトリ外(例: `/tmp`)へのアクセスを拒否することがある。instruction が参照するファイルは呼び出し時の cwd 配下に置く
 - 存在しないモデル・認証失敗は `is_error` / HTTP status として返り、bridge が exit 3 に変換する
 - 出力形式の軽微な逸脱(タグ欠落)は起き得る。機械処理する場合は instruction に出力契約を書いた上で `--expect` を併用する
