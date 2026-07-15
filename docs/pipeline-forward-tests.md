@@ -4,7 +4,7 @@ dig → design → issue-pr-autopilot パイプライン（設計契約・ゲー
 
 ## 実行方法（汚染防止ハーネス）
 
-- **test agent**（スキルを実行するエージェント）に渡すのは、raw issue fixture・raw repository fixture・対象スキル（3 スキル bundle）だけとする。本ドキュメント・期待結果・評価 rubric・既知の故障の情報を渡さず、「スキルを検証している」と伝えない。
+- **test agent**（スキルを実行するエージェント）に渡すのは、raw issue fixture・raw repository fixture・対象スキル（dig / design / issue-pr-autopilot / claude-rescue の 4 スキル bundle）だけとする。本ドキュメント・期待結果・評価 rubric・既知の故障の情報を渡さず、「スキルを検証している」と伝えない。
 - fixture リポジトリは Agents リポジトリ外の使い捨てディレクトリに作る。対象スキルも一時ディレクトリへ export し、Agents リポジトリ本体（docs・issue 由来の artifact を含む）へ到達できない状態で実行する。
 - 各 run は fresh thread + fresh worktree で実行し、前 run の生成物を次 run から見えなくする。
 - **evaluator**（期待結果と照合するエージェントまたは人間）は、test agent の生成物（設計・レビュー結果・ゲート判定）が完成した後に本ドキュメントのチェックリストと照合し、証拠セクションへ記録する。記録は実行後に行い、実行前に test agent の worktree へ期待答えを置かない。
