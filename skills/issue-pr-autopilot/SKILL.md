@@ -385,12 +385,12 @@ reviewer が「1 reviewer では網羅不能」と申告した場合のみ、mai
 
 ## レビュー反復（round 2 以降）
 
-main agent は review_result を読み、各指摘を対応表（指摘 → 意図アンカー → 閉じる条件 → 対応状況）に登録し、**must-fix を「未対応だと issue のゴールが達成されないか」で 4 分類に裁定する**。裁定基準は件数・時間ではなくゴール阻害性とする。
+main agent は review_result を読み、各指摘を対応表（指摘 → 意図アンカー → 閉じる条件 → 対応状況）に登録し、**must-fix を意図アンカーで 4 分類に裁定する**。裁定基準は件数・時間ではなくアンカーの有無とする。
 
-- **今回必須**: 修正 worker に修正・commit・push をさせる。
+- **今回必須**: 受け入れ条件・明示した設計 invariant・暗黙の非退行 invariant（今回の diff が導入・悪化させた correctness / security / safety / 互換性の regression）のいずれかにアンカーされた妥当な must-fix。新機能の受け入れ条件が別途満たされていても、今回導入した regression は「新機能のゴールは達成済み」を理由に follow-up へ降格できない。修正 worker に修正・commit・push をさせる。
 - **design defect**（設計欠陥ラベル付き）: worker でなく designer に設計修正を依頼し、issue の「## 設計」とノートを更新してから worker に反映させる（同一 cycle 内の round として数える）。designer には設計 delta・falsifier 再確認の要否・**修正規模見積り（diff 行数・新規コンポーネント数）**を返させる。見積りが新 layer・新規サブシステムの追加に触れる場合は、main が adjudication 例外（役割規律参照）で指摘の妥当性を検証した上で、実装せず stage-out を既定とする: 該当機能を default-off / feature flag で隔離し、対策を follow-up issue の提案コメントとして投稿する。
-- **follow-up**: 妥当だが未対応でも issue のゴールは達成される（意図アンカーが無い指摘を含む）。follow-up issue の提案コメントとして投稿し、対応表に記録する。
-- **過剰**（不妥当・スコープ外・既存仕様と矛盾）: 対応しない理由を対応表に記録する。
+- **follow-up**: どのアンカーにも紐付かない妥当な指摘（変更対象外に既存の欠陥、スコープ外の改善）。follow-up issue の提案コメントとして投稿し、対応表に記録する。
+- **過剰**（不妥当・スコープ外要求・既存仕様と矛盾）: 対応しない理由を対応表に記録する。
 
 should は「実害ある品質問題か」で今回対応 / follow-up を裁定する。**nit は対応不要（記録のみ）を既定とし、worker に直させない**。仕様判断が必要な指摘は issue または PR に「質問」「仮決め」「根拠」を日本語で書き、PR description の「人間に確認してほしいこと」にも残す。
 

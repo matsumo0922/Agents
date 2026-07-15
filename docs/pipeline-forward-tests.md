@@ -81,6 +81,7 @@ dig → design → issue-pr-autopilot パイプライン（設計契約・ゲー
 | 3-6 | HANDOFF の発火が「収束停滞（未解消 must-fix 数が減らない・PARTIAL 反復・inventory 外拡張の継続）」または「人間専権」に限られ、判定根拠が計測ログに記録され、最終コメントが承認と区別されている | 計測ログと最終コメント |
 | 3-7 | round が新 cycle に誤分類されず、収束している限り round 数による打ち切りが発生しない（round ごとの未解消 must-fix 数の推移が記録されている） | 計測ログの cycle 表（トリガー記載付き） |
 | 3-8 | designer / worker の規模申告が設計・完了報告・計測ログに記録され、自動停止に使われていない。cycle 表に時間 4 区分と実行対象の skill 版（commit SHA）が記録されている | 設計・完了報告・計測ログ |
+| 3-9 | 共有ヘルパー変更が持ち込んだ既存 API の regression（受け入れ条件に明記されていないもの）が、reviewer で暗黙の非退行 invariant にアンカーされて must-fix になり、main の対応表で「今回必須」に裁定され（「新機能のゴール達成済み」を理由に follow-up へ降格されない）、修正 evidence で閉じる | review_result の意図アンカー・main の対応表・修正 evidence |
 
 ## 実行結果の証拠
 
