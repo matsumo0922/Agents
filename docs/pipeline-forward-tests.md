@@ -4,7 +4,7 @@ dig → design → issue-pr-autopilot パイプライン（設計契約・ゲー
 
 ## 実行方法（汚染防止ハーネス）
 
-- **test agent**（スキルを実行するエージェント）に渡すのは、raw issue fixture・raw repository fixture・対象スキル（3 スキル bundle）だけとする。本ドキュメント・期待結果・評価 rubric・既知の故障の情報を渡さず、「スキルを検証している」と伝えない。
+- **test agent**（スキルを実行するエージェント）に渡すのは、raw issue fixture・raw repository fixture・対象スキル（dig / design / issue-pr-autopilot / claude-rescue の 4 スキル bundle）だけとする。本ドキュメント・期待結果・評価 rubric・既知の故障の情報を渡さず、「スキルを検証している」と伝えない。
 - fixture リポジトリは Agents リポジトリ外の使い捨てディレクトリに作る。対象スキルも一時ディレクトリへ export し、Agents リポジトリ本体（docs・issue 由来の artifact を含む）へ到達できない状態で実行する。
 - 各 run は fresh thread + fresh worktree で実行し、前 run の生成物を次 run から見えなくする。
 - **evaluator**（期待結果と照合するエージェントまたは人間）は、test agent の生成物（設計・レビュー結果・ゲート判定）が完成した後に本ドキュメントのチェックリストと照合し、証拠セクションへ記録する。記録は実行後に行い、実行前に test agent の worktree へ期待答えを置かない。
@@ -66,6 +66,7 @@ dig → design → issue-pr-autopilot パイプライン（設計契約・ゲー
 
 - round 1 のレビューが must-fix 5 件以上を返す密度の欠陥（同根クラスを含む）。
 - 修正すると新しい欠陥を持ち込みやすい箇所（共有ヘルパー・置換系）を 1 つ以上含める。
+- **既存 API の挙動を実際に壊す共有ヘルパー変更を初期実装に必ず含める**。壊れる既存挙動は issue の受け入れ条件に書かず、暗黙の非退行 invariant にだけアンカーできる状態にする（3-9 の検証対象。この regression が実在しない run は 3-9 を合格にしない）。
 - 設計レベルの欠陥（修正に新規機構の追加を要するもの）を 1 件含める。
 - 環境依存で決定的にテストできない挙動（プロセス終端・並行実行相当）への指摘を誘発する箇所を 1 つ含める。
 
@@ -73,14 +74,15 @@ dig → design → issue-pr-autopilot パイプライン（設計契約・ゲー
 
 | # | チェック | 観測方法 |
 |---|---|---|
-| 3-1 | 全 must-fix に ID 付き有限 inventory と閉じる条件が付き、「全〜」「〜など」だけの閉じる条件が無い | round 1 の review_result |
+| 3-1 | 全 must-fix に意図アンカー（対応する受け入れ条件・invariant）と ID 付き有限 inventory・閉じる条件が付き、「全〜」「〜など」だけの閉じる条件が無い | round 1 の review_result |
 | 3-2 | 再レビューが inventory ID 単位の CLOSED / PARTIAL / NEW 判定のみで、同一指摘の要求拡張が無い | round 2 の review_result |
-| 3-3 | 設計レベルの欠陥が designer に差し戻され、修正規模見積りが予算ゲートに触れる場合は stage-out（default-off 隔離 + follow-up issue 提案）が選ばれる | 対応表と issue コメント |
+| 3-3 | 設計レベルの欠陥が designer に差し戻され、修正に新 layer・新規サブシステムの追加を要する場合は stage-out（default-off 隔離 + follow-up issue 提案）が選ばれる | 対応表と issue コメント |
 | 3-4 | 環境依存挙動への指摘が targeted テスト 1 本 + deploy 後確認の証明 tier で閉じ、flaky テストの反復修正が発生しない | 検証台帳と commit 履歴 |
-| 3-5 | 予算ゲートの構造条件（PARTIAL ×2 / inventory 外への拡張継続 / 新 layer）のいずれかが発動した場合、修正を積まずに HANDOFF へ分岐し、最終コメントが承認と区別されている | 計測ログと最終コメント |
-| 3-8 | scope-growth（diff 2 倍 + 500 行超）と SLO 通知（120 分）がシグナルとして記録され、単独では停止していない | 計測ログ |
-| 3-6 | 内部レビューが 1 cycle 最大 2 round で終わり、round が新 cycle に誤分類されない | 計測ログの cycle 表（トリガー記載付き） |
-| 3-7 | 旧版比の wall-clock / round 数が改善している（同一 fixture の旧 skill 実行と比較） | cycle 表の時間 4 区分 |
+| 3-5 | 意図アンカーを付けられない指摘が must-fix にならず follow-up 提案に分類され、nit が「対応不要（記録のみ）」のまま修正 diff に混入しない | review_result・対応表・diff |
+| 3-6 | HANDOFF の発火が「収束停滞（未解消 must-fix 数が減らない・PARTIAL 反復・inventory 外拡張の継続）」または「人間専権」に限られ、判定根拠が計測ログに記録され、最終コメントが承認と区別されている | 計測ログと最終コメント |
+| 3-7 | round が新 cycle に誤分類されず、収束している限り round 数による打ち切りが発生しない（round ごとの未解消 must-fix 数の推移が記録されている） | 計測ログの cycle 表（トリガー記載付き） |
+| 3-8 | designer / worker の規模申告が設計・完了報告・計測ログに記録され、自動停止に使われていない。cycle 表に時間 4 区分と実行対象の skill 版（commit SHA）が記録されている | 設計・完了報告・計測ログ |
+| 3-9 | 共有ヘルパー変更が持ち込んだ既存 API の regression（受け入れ条件に明記されていないもの）が、reviewer で暗黙の非退行 invariant にアンカーされて must-fix になり、main の対応表で「今回必須」に裁定され（「新機能のゴール達成済み」を理由に follow-up へ降格されない）、修正 evidence で閉じる | review_result の意図アンカー・main の対応表・修正 evidence |
 
 ## 実行結果の証拠
 

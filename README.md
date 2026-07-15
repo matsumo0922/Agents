@@ -133,14 +133,11 @@ make unlink-project PROJECT=~/dev/App/OneNavi
 
 ## 管理中のスキル
 
-3 スキルは dig（前提への挑戦）→ design（構造の決定）→ issue-pr-autopilot（実装とレビュー）のパイプラインを構成し、1 つの bundle として `make link` で一括配布します。issue-pr-autopilot は design スキルの `references/design-contract.md`（設計契約）と `falsifier-rubric.md` を参照するため、単体配布はサポートしません。
+dig（前提への挑戦）→ design（構造の決定）→ issue-pr-autopilot（実装とレビュー）のパイプラインと、Claude 呼び出しブリッジの claude-rescue を、1 つの bundle として `make link` で一括配布します。issue-pr-autopilot は design スキルの `references/design-contract.md`（設計契約）・`falsifier-rubric.md` と claude-rescue の `scripts/claude-bridge.sh` を参照するため、単体配布はサポートしません。
 
 - [dig](skills/dig/README.md): プランの暗黙の前提と未検討リスクを、構造化質問の反復インタビューで掘り起こすためのスキル。Decisions は design が要件・事実・仮定として引き継ぎます。
 - [design](skills/design/README.md): 実装前の設計を architect サブエージェント・独立反証（falsifier）・構造化質問で設計契約準拠に確定し、issue の「## 設計」として投稿するためのスキル。
 - [issue-pr-autopilot](skills/issue-pr-autopilot/README.md): issue や作業説明を起点に、設計ゲート・worktree 実装・evidence 受理ゲート・2 パスレビュー・cycle 計測付きで PR 作成からレビュー反復まで自走させるためのスキル。
-
-パイプラインとは独立に、単体で使える汎用スキルも管理します。
-
-- [claude-rescue](skills/claude-rescue/README.md): 任意の環境から Claude を headless（`claude -p`）で呼び出し、構造化された結果を受け取る汎用ブリッジ。Claude サブエージェントを持たない環境（Codex 等）からのレビュー・反証依頼に使います。
+- [claude-rescue](skills/claude-rescue/README.md): 任意の環境から Claude を headless（`claude -p`）で呼び出し、構造化された結果を受け取る汎用ブリッジ。パイプラインでは Claude サブエージェントを持たない環境（Codex 等）の reviewer / falsifier 呼び出しに使い、パイプライン外のセカンドオピニオン依頼にも単体で使えます。
 
 パイプラインの forward test は [docs/pipeline-forward-tests.md](docs/pipeline-forward-tests.md) に定義し、スキル改訂時に実行結果の証拠を記録します。

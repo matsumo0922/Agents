@@ -147,5 +147,5 @@ main agent は質問案を構造化質問ツールでユーザーに提示する
 
 - 構造化質問は request_user_input（1〜3問）。自由記述が欲しい選択肢には isOther を使う。
 - サブエージェントの spawn が explicit-only 設定などで使えない場合はインライン分析にフォールバックし、読む対象をプラン本体と直接参照されるドキュメントだけに絞る。
-- 読み込み中心の分析には組み込みの explorer エージェントが向く。役割別の model / reasoning effort は `~/.codex/agents/*.toml` の `model_reasoning_effort` で調整できる。分析は長文脈読解のため、モデルはバランスティア以上（`gpt-5.6-terra` 等）を維持し、`gpt-5.6-luna` に落とさない。
+- 読み込み中心の分析には組み込みの explorer エージェントが向く。役割別の model / reasoning effort は `~/.codex/agents/*.toml` の `model_reasoning_effort` で調整できる。分析は長文脈読解のため `gpt-5.6-sol` の high を既定とし、最軽量ティアに落とさない。
 - `update_plan` はチェックリスト管理ツールであり、決定の記録先にしない。記録は必ず記録ファイルに書く。
