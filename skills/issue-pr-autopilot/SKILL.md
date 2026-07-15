@@ -387,7 +387,7 @@ reviewer が「1 reviewer では網羅不能」と申告した場合のみ、mai
 
 main agent は review_result を読み、各指摘を対応表（指摘 → 意図アンカー → 閉じる条件 → 対応状況）に登録し、**must-fix を 4 分類に裁定する**。まず設計欠陥ラベルの有無を判定し、ラベル付きはアンカーの有無にかかわらず design defect とする。残りをアンカーの有無で 今回必須 / follow-up / 過剰 に分類する（件数・時間では分類しない）。
 
-- **design defect**（設計欠陥ラベル付き。他分類より優先して判定する）: worker でなく designer に設計修正を依頼し、issue の「## 設計」とノートを更新してから worker に反映させる（同一 cycle 内の round として数える）。designer には設計 delta・falsifier 再確認の要否・**修正規模見積り（diff 行数・新規コンポーネント数）**を返させる。見積りが新 layer・新規サブシステムの追加に触れる場合は、main が adjudication 例外（役割規律参照）で指摘の妥当性を検証した上で、実装せず stage-out を既定とする: 該当機能を default-off / feature flag で隔離し、対策を follow-up issue の提案コメントとして投稿する。
+- **design defect**（設計欠陥ラベル付き。最優先で判定する）: worker でなく designer に設計修正を依頼し、issue の「## 設計」とノートを更新してから worker に反映させる（同一 cycle 内の round として数える）。designer には設計 delta・falsifier 再確認の要否・**修正規模見積り（diff 行数・新規コンポーネント数）**を返させる。見積りが新 layer・新規サブシステムの追加に触れる場合は、main が adjudication 例外（役割規律参照）で指摘の妥当性を検証した上で、実装せず stage-out を既定とする: 該当機能を default-off / feature flag で隔離し、対策を follow-up issue の提案コメントとして投稿する。
 - **今回必須**（設計欠陥ラベルが無く、受け入れ条件・明示した設計 invariant・暗黙の非退行 invariant（今回の diff が導入・悪化させた correctness / security / safety / 互換性の regression）のいずれかにアンカーされた妥当な must-fix）: 新機能の受け入れ条件が別途満たされていても、今回導入した regression は「新機能のゴールは達成済み」を理由に follow-up へ降格できない。修正 worker に修正・commit・push をさせる。
 - **follow-up**: どのアンカーにも紐付かない妥当な指摘（変更対象外に既存の欠陥、スコープ外の改善）。follow-up issue の提案コメントとして投稿し、対応表に記録する。
 - **過剰**（不妥当・スコープ外要求・既存仕様と矛盾）: 対応しない理由を対応表に記録する。
