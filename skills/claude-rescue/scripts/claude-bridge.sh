@@ -19,10 +19,10 @@ MODEL="claude-opus-4-8"
 EFFORT="high"
 RESUME=""
 EXPECT=""
-# Bash は明示 allow しない。read-only な Bash(git diff 等)の可否は
-# --permission-mode dontAsk 下で Claude Code 自身の read-only 分類に委ねる
-# (wildcard の Bash allow は複合コマンドまで事前承認してしまうため使わない)。
-ALLOWED_TOOLS="Read,Grep,Glob"
+# Bash を素通しで allow する。危険コマンド(rm -rf / sudo / git config / 秘密ファイル
+# 読取 等)は settings.json の deny が全モードで最優先に効くため、そちらで弾く。
+# Edit / Write は allow しないので、正規の編集ツール経由でのファイル改変は起きない。
+ALLOWED_TOOLS="Read,Grep,Glob,Bash"
 
 usage() {
   sed -n '4,16p' "$0" | sed 's/^# \{0,1\}//'
