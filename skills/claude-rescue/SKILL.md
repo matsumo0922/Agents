@@ -23,8 +23,8 @@ scripts/claude-bridge.sh <instruction-file> [--model <model>] [--effort <level>]
 ```
 
 - instruction はファイル渡し(長文指示の shell quoting を回避する)
-- 既定値: `--model claude-opus-4-8` / `--effort high` / `--allowed-tools "Read,Grep,Glob"`。引数で上書きできる
-- 呼び出しは常に `--permission-mode dontAsk`(headless 向け: 未承認の操作をプロンプトせず拒否する fail-closed)。read-only な Bash(`git diff` 等)は Claude Code 自身の read-only 分類により allowlist 追加なしで通る
+- 既定値: `--model claude-opus-4-8` / `--effort high` / `--allowed-tools "Read,Grep,Glob,Bash"`。引数で上書きできる
+- 呼び出しは常に `--permission-mode dontAsk`(headless 向け: 未承認の操作をプロンプトせず拒否する fail-closed)。Bash は既定で allow され、危険コマンドは `~/.claude/settings.json` の deny が全モードで最優先に弾く。Edit / Write は allow されない
 - `--expect <tag>`: result に `<tag>...</tag>` ブロック(開始タグ → 終了タグの順)が含まれることを機械検査する。欠落時は同一セッションへ「指定形式のみで再送」を 1 回だけ自動再依頼する
 - `--resume <session-id>`: 既存セッションを継続する(レビュー round 2 の追記など)。session_id は前回呼び出しの stderr から取得する
 
@@ -57,7 +57,7 @@ scripts/claude-bridge.sh round2.md --resume "$session_id" --expect review_result
 
 - **Codex から呼ぶ場合は `require_escalated` で起動する**。session の保存と `--resume` による round 追記には `~/.claude/projects` への書き込みが必要で、通常 sandbox では失敗する。auto-approve 環境では escalation は無人で承認される。単発呼び出し(`--resume` を使わない)だけなら通常 sandbox でも動く
 - `claude` バイナリと `~/.claude` の認証情報、api.anthropic.com への到達性が必要
-- **Bash を wildcard で明示 allow しない**(`Bash(git diff*)` のような prefix 許可は複合コマンド `git diff; 任意のコマンド` にもマッチし、事前承認になってしまう)。read-only 制約は `--permission-mode dontAsk` + Claude Code 自身の read-only 分類が担い、書き込み系はプロンプトなしで拒否される。拒否は `permission_denials` として返り、bridge が exit 3 に変換する
+- **Bash は既定で allow され、安全網は `~/.claude/settings.json` の deny が担う**。headless の Claude は呼び出しユーザーの `~/.claude` を継承するため、`rm -rf` / `sudo` / `git config` / 秘密ファイル読取などの deny ルールが `--permission-mode dontAsk` でも最優先で効く。deny に該当する操作は `permission_denials` として返り、bridge が exit 3 に変換する。read-only なレビュー・反証で `find` / `grep` / `git log` などの探索コマンドを使えるようにするための既定で、Edit / Write は allow しない
 - headless の Claude は作業ディレクトリ外(例: `/tmp`)へのアクセスを拒否することがある。instruction が参照するファイルは呼び出し時の cwd 配下に置く
 - 存在しないモデル・認証失敗は `is_error` / HTTP status として返り、bridge が exit 3 に変換する
 - 出力形式の軽微な逸脱(タグ欠落)は起き得る。機械処理する場合は instruction に出力契約を書いた上で `--expect` を併用する
