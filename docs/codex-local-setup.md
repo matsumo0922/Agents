@@ -6,17 +6,13 @@
 
 ## Claude bridge の Auto-review 設定
 
-Codex から `claude-rescue` の `claude-bridge.sh` を実行すると、repository source、diff、設計・review 文脈を Anthropic Claude へ送信します。`approval_policy = "on-request"` と `approvals_reviewer = "auto_review"` を使う環境では、この送信が未登録の外部 destination への data export と判定され、`require_escalated` の実行が拒否される場合があります。
-
-この repository と Anthropic への送信を信頼し、bridge 実行ごとの Auto-review を省略する場合は、`~/.codex/rules/default.rules` に bridge executable だけを許可する narrow prefix rule を追加します。この設定により、bridge 経由では repository source、diff、設計・review 文脈が今後の個別確認なしで Anthropic へ送信されます。secret、credential、認証ファイルを instruction や参照対象に含めない運用を前提とします。
-
-まず、Agents checkout にある bridge の絶対パスを取得します。
+Codex から `claude-rescue` を実行すると Auto-review で弾かれる場合があります。Agents checkout にある bridge の絶対パスを確認します。
 
 ```bash
 realpath skills/claude-rescue/scripts/claude-bridge.sh
 ```
 
-出力された絶対パスを `pattern` に指定します。次の `/absolute/path/to/Agents` は実際の checkout path に置き換えます。
+出力された絶対パスを使い、`~/.codex/rules/default.rules` に次の rule を追加します。
 
 ```python
 prefix_rule(
@@ -27,34 +23,6 @@ prefix_rule(
     justification = "Allow the owner-approved Claude review bridge without repeated Auto-review prompts.",
 )
 ```
-
-bridge executable だけを prefix にすることで、ほかの external command、destination、destructive operation は通常の sandbox と Auto-review の対象に保ちます。`approval_policy = "never"` や `sandbox_mode = "danger-full-access"` への変更は不要です。
-
-rule の構文と match は、bridge を実行せずに確認できます。
-
-```bash
-BRIDGE="$(realpath skills/claude-rescue/scripts/claude-bridge.sh)"
-codex execpolicy check --pretty \
-  --rules ~/.codex/rules/default.rules \
-  "$BRIDGE" /tmp/example-review.txt \
-  --model claude-opus-4-8 --effort high --expect review_result
-```
-
-結果の `decision` が `allow` で、`matchedPrefix` が bridge の絶対パスなら rule は一致しています。
-
-実際の無承認起動を確認する場合は、repository data を参照しない instruction で単発の疎通テストを行います。
-
-```bash
-cat >/tmp/claude-bridge-permission-test.txt <<'EOF'
-ファイルや repository を読まず、外部 tool も使わず、次の形式だけを返してください。
-<bridge_test>ok</bridge_test>
-EOF
-
-"$BRIDGE" /tmp/claude-bridge-permission-test.txt \
-  --model claude-opus-4-8 --effort high --expect bridge_test
-```
-
-exit code `0` で `<bridge_test>ok</bridge_test>` が返り、Codex の approval が発生しなければ設定は有効です。単発呼び出しは通常 sandbox でも実行できます。`--resume` を使う処理は `~/.claude/projects` への書き込みが必要なため、skill の指示どおり `require_escalated` で起動しますが、この prefix rule に一致すれば個別の Auto-review は発生しません。
 
 Codex は起動時に rule を読み込むため、`default.rules` を編集した後は Codex を開き直すか、新しい session を開始します。
 
