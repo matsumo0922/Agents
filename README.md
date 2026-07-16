@@ -31,6 +31,12 @@ skills/
     README.md
     scripts/
       claude-bridge.sh
+  japanese-tech-writing/
+    SKILL.md
+    README.md
+  cognitive-rhythm-writing/
+    SKILL.md
+    README.md
 docs/
   pipeline-forward-tests.md
   codex-local-setup.md
@@ -139,5 +145,7 @@ dig（前提への挑戦）→ design（構造の決定）→ issue-pr-autopilot
 - [design](skills/design/README.md): 実装前の設計を architect サブエージェント・独立反証（falsifier）・構造化質問で設計契約準拠に確定し、issue の「## 設計」として投稿するためのスキル。
 - [issue-pr-autopilot](skills/issue-pr-autopilot/README.md): issue や作業説明を起点に、設計ゲート・worktree 実装・evidence 受理ゲート・2 パスレビュー・cycle 計測付きで PR 作成からレビュー反復まで自走させるためのスキル。
 - [claude-rescue](skills/claude-rescue/README.md): 任意の環境から Claude を headless（`claude -p`）で呼び出し、構造化された結果を受け取る汎用ブリッジ。パイプラインでは Claude サブエージェントを持たない環境（Codex 等）の reviewer / falsifier 呼び出しに使い、パイプライン外のセカンドオピニオン依頼にも単体で使えます。
+- [japanese-tech-writing](skills/japanese-tech-writing/README.md): 日本語の技術文書・書籍原稿・記事・解説文を執筆、推敲するための文章規範。
+- [cognitive-rhythm-writing](skills/cognitive-rhythm-writing/README.md): 説明的な文章に認知モードの切り替えと未回収の緊張を設計する文章規範。japanese-tech-writing を併用します。
 
 パイプラインの forward test は [docs/pipeline-forward-tests.md](docs/pipeline-forward-tests.md) に定義し、スキル改訂時に実行結果の証拠を記録します。
