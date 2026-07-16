@@ -1,0 +1,4 @@
+interface:
+  display_name: "Falsify"
+  short_description: "設計・提案を clean context で独立反証する"
+  default_prompt: "Use $falsify to run an independent falsification of the current design or proposal: enumerate counterexamples across the five vectors and drive blocking findings to resolution."
