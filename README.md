@@ -35,6 +35,7 @@ skills/
     README.md
 docs/
   codex-local-setup.md
+  openspec-guide.md
 rules/
   AGENTS.md
   kotlin.md
@@ -101,6 +102,17 @@ make unlink-skills
 make unlink-rules
 ```
 
+### OpenSpec の導入
+
+issue-pr-autopilot は、対象プロジェクトに [OpenSpec](https://github.com/Fission-AI/OpenSpec) が導入されていることを前提とします。未導入のプロジェクトでは autopilot は停止するか、自明な単一レイヤー変更に限定したフォールバックで動作します。プロジェクトごとに次を実行して導入します。
+
+```bash
+npm install -g @fission-ai/openspec@latest
+openspec init --tools claude,codex
+```
+
+Homebrew にも formula がありますが upstream 非公式のため、公式チャネルの npm を使います。OpenSpec 自体の使い方は [docs/openspec-guide.md](docs/openspec-guide.md) を参照してください。
+
 ## Kotlin プロジェクトへの規約配布
 
 `rules/kotlin.md` と `rules/lint/` は、Kotlin プロジェクトごとに opt-in で配布します。
@@ -134,11 +146,11 @@ make unlink-project PROJECT=~/dev/App/OneNavi
 
 ## 管理中のスキル
 
-開発パイプラインは [OpenSpec](https://github.com/Fission-AI/OpenSpec) を土台にします。設計の構造（proposal / delta spec / design / tasks）と仕様の永続化は各プロジェクトに導入した OpenSpec が担い、本リポジトリのスキルはその周辺を受け持ちます: dig（設計前の対話反証）→ OpenSpec の propose（設計）→ falsify（設計後の独立反証）→ issue-pr-autopilot（propose→apply を駆動する配送シェル）。これらと Claude 呼び出しブリッジの claude-rescue を、1 つの bundle として `make link` で一括配布します。issue-pr-autopilot は falsify と、Claude サブエージェントを持たない環境では claude-rescue の `scripts/claude-bridge.sh` を参照するため、単体配布はサポートしません。
+開発パイプラインは [OpenSpec](https://github.com/Fission-AI/OpenSpec) を土台にします（使い方は [docs/openspec-guide.md](docs/openspec-guide.md) を参照）。設計の構造（proposal / delta spec / design / tasks）と仕様の永続化は各プロジェクトに導入した OpenSpec が担い、本リポジトリのスキルはその周辺を受け持ちます。流れは、dig（設計前の対話反証）→ OpenSpec の propose（設計）→ falsify（設計後の独立反証）→ issue-pr-autopilot（propose→apply を駆動する配送シェル）です。これらと Claude 呼び出しブリッジの claude-rescue を、1 つの bundle として `make link` で一括配布します。issue-pr-autopilot は falsify と、Claude サブエージェントを持たない環境では claude-rescue の `scripts/claude-bridge.sh` を参照するため、単体配布はサポートしません。
 
-- [dig](skills/dig/README.md): プランの暗黙の前提と未検討リスクを、構造化質問の反復インタビューで掘り起こすためのスキル。Decisions は設計（OpenSpec の propose や issue-pr-autopilot）が要件・事実・仮定として引き継ぎます。
-- [falsify](skills/falsify/README.md): 設計・提案を書いた本人以外の clean context が反証する独立反証スキル。反証 5 ベクトル・blocking の処置・帰属タグ・価値判断をユーザーに確定させる質問作法を定めます。
-- [issue-pr-autopilot](skills/issue-pr-autopilot/README.md): issue や作業説明を起点に、OpenSpec の propose→apply を worktree 内で駆動し、反証ゲート・レビューループ・収束判定を経て PR 作成まで自走させる配送シェル。
-- [claude-rescue](skills/claude-rescue/README.md): 任意の環境から Claude を headless（`claude -p`）で呼び出し、構造化された結果を受け取る汎用ブリッジ。パイプラインでは Claude サブエージェントを持たない環境（Codex 等）の reviewer / falsifier 呼び出しに使い、パイプライン外のセカンドオピニオン依頼にも単体で使えます。
-- [japanese-tech-writing](skills/japanese-tech-writing/README.md): 日本語の技術文書・書籍原稿・記事・解説文を執筆、推敲するための文章規範。
-- [cognitive-rhythm-writing](skills/cognitive-rhythm-writing/README.md): 説明的な文章に認知モードの切り替えと未回収の緊張を設計する文章規範。japanese-tech-writing を併用します。
+- [dig](skills/dig/README.md)：プランの暗黙の前提と未検討リスクを、構造化質問の反復インタビューで掘り起こすためのスキル。Decisions は設計（OpenSpec の propose や issue-pr-autopilot）が要件、事実、仮定として引き継ぎます。
+- [falsify](skills/falsify/README.md)：設計や提案を書いた本人以外の clean context が反証する独立反証スキル。反証 5 ベクトル、blocking の処置、帰属タグ、価値判断をユーザーに確定させる質問作法を定めます。
+- [issue-pr-autopilot](skills/issue-pr-autopilot/README.md)：issue や作業説明を起点に、OpenSpec の propose→apply を worktree 内で駆動し、反証ゲート、レビューループ、収束判定を経て PR 作成まで自走させる配送シェル。
+- [claude-rescue](skills/claude-rescue/README.md)：任意の環境から Claude を headless（`claude -p`）で呼び出し、構造化された結果を受け取る汎用ブリッジ。パイプラインでは Claude サブエージェントを持たない環境（Codex 等）の reviewer / falsifier 呼び出しに使い、パイプライン外のセカンドオピニオン依頼にも単体で使えます。
+- [japanese-tech-writing](skills/japanese-tech-writing/README.md)：日本語の技術文書、書籍原稿、記事、解説文を執筆、推敲するための文章規範。
+- [cognitive-rhythm-writing](skills/cognitive-rhythm-writing/README.md)：説明的な文章に認知モードの切り替えと未回収の緊張を設計する文章規範。japanese-tech-writing を併用します。
