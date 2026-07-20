@@ -86,6 +86,7 @@ sequenceDiagram
 - **main がリード役**：文脈を全部持つ main が propose、実装、裁定、収束判定を自分で行い、clean context の隔離は敵対的役割（falsifier / reviewer）に限定します。worker は長大な実装とレビュー修正ラウンド（裁定者と修正者の分離）でのみ fresh spawn します
 - **正本の二層定義**：契約の正本は issue の受け入れ条件、実行時の検証単位は delta spec の Scenario。食い違いは停止して質問します
 - **意図アンカー**：指摘の紐付け先は「delta spec の Requirement/Scenario ∪ 暗黙の非退行 invariant」。既存で未変更の欠陥は must-fix にせず follow-up 提案に分類します
+- **最小充足と発見事項**：提案は受け入れ条件を満たす最小のものを既定とし、拡張は反証・レビュー・検証が実際に失敗を示した場合にのみ行います。実装中に見つけた紐付かない欠陥や改善点は修正せず、発見事項として列挙し follow-up に回します
 - **収束性による停止**：round ごとの未解消 must-fix 数が減っている限り続行し、停滞したら HANDOFF します。round 数上限や時間では打ち切りません
 - **archive は merge 後**：この run の change は run 内で archive せず、次回 run が worktree 内で merge 済み change（tasks 全完了、または対応 PR が merged のもののみ）を `openspec archive --yes` で回収し、archive 差分を最初の commit に含めて PR で確認できるようにします
 
