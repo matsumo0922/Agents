@@ -33,6 +33,7 @@ skills/
     SKILL.md
     README.md
 docs/
+  cliproxy-setup.md
   codex-local-setup.md
   openspec-guide.md
 rules/
@@ -67,6 +68,8 @@ CLAUDE.md
 ## セットアップ
 
 Codex の PC ごとの個人環境設定は [docs/codex-local-setup.md](docs/codex-local-setup.md) を参照します。
+
+Claude Code から OAuth サブスク枠経由で GPT 系・Claude 系モデルを使うための CLIProxyAPI のセットアップは [docs/cliproxy-setup.md](docs/cliproxy-setup.md) を参照します。
 
 リンク状態を確認します。
 
@@ -108,7 +111,7 @@ make unlink-agents
 
 ### agent 定義（GPT worker）の運用
 
-`agents/` は CLIProxy 経由で GPT を Claude Code の subagent として使うための agent 定義（`model:` / `effort:` を持つ frontmatter）を置きます。`make link-agents` で `agents/*.md` を `~/.claude/agents/` へファイル単位の symlink として配布します。
+`agents/` は CLIProxy 経由で GPT を Claude Code の subagent として使うための agent 定義（`model:` / `effort:` を持つ frontmatter）を置きます。`make link-agents` で `agents/*.md` を `~/.claude/agents/` へファイル単位の symlink として配布します。CLIProxyAPI 自体のセットアップと、この frontmatter 方式を採用した理由は [docs/cliproxy-setup.md](docs/cliproxy-setup.md) を参照してください。
 
 effort 別に使う agent ファイルを増減する場合は、`agents/` にファイルを追加または削除して `make link-agents` / `make unlink-agents` を再実行するだけです。スクリプトは `agents/*.md` を動的に走査するため、ファイル名やスクリプト自体の変更は不要です。
 
