@@ -10,7 +10,7 @@
 
 ## 設計の要点
 
-- **clean context の falsifier**：反証対象とリポジトリ（読み取り専用）だけを渡し、書き手の弁明や検討の経緯を渡さない。Claude サブエージェントが無い環境（Codex 等）では claude-rescue のブリッジで代替する
+- **clean context の falsifier**：反証対象とリポジトリ（読み取り専用）だけを渡し、書き手の弁明や検討の経緯を渡さない。Codex 環境では Codex 自身のサブエージェント（spawn）で立てる
 - **反証 5 ベクトル**：production fact との不一致 / invariant を破る反例 / failure 後の downstream state / safety direction / 負荷、容量、upgrade path
 - **blocking は自己承認で閉じられない**：設計修正、保証の縮退、stage-out、人間判断の 4 ルートのみで閉じ、解消確認は falsifier が行う
 - **価値判断はユーザー専権**：リスク許容や運用方針はユーザーに質問で確定させ、agent の判断は帰属タグ（ユーザー確認済み / agent 仮決め / 高リスク・要人間確認）で可視化する
