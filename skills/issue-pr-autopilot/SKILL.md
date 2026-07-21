@@ -40,10 +40,26 @@ OpenSpec との役割分担として、成果物の形式（proposal.md / delta 
 
 main が文脈を全部持つリード役として、propose、実装、裁定、収束判定を自分で行う。clean context の隔離は敵対的役割だけに適用する。
 
-- **falsifier / reviewer**：clean context の強モデル。書き手と実装者の弁明を渡さない
-- **worker**：セッションモデルまたは中位モデル。「長大な実装」と「レビュー修正ラウンド（裁定者と修正者の分離）」でのみ fresh spawn し、main が書いた濃い brief を渡す
+- **falsifier / reviewer**：clean context。書き手と実装者の弁明を渡さない
+- **worker**：「長大な実装」と「レビュー修正ラウンド（裁定者と修正者の分離）」でのみ fresh spawn し、main が書いた濃い brief を渡す
+- **architect**：propose は main が自分で行うのが既定。設計作業を委任する場合のみ spawn する
 
 サブエージェント間の受け渡しは要約と参照（パス、SHA、URL）で行い、ネストさせない（中継のたびに文脈が劣化コピーになるため）。spawn のたびに割り当てモデル名を進捗報告に明示する。
+
+### モデル割当
+
+main は常にセッションのモデル。subagent は実行環境ごとに次表を既定とする。
+
+| 役割 | Claude Code（Claude のみ） | Codex（GPT のみ） | Claude Code（クロスモデル） |
+|---|---|---|---|
+| architect（委任時） | Opus 4.8 / high | gpt-5.6-sol / medium | Opus 4.8 / high |
+| falsifier | Opus 4.8 / high | gpt-5.6-sol / high | gpt-5.6-sol / high |
+| worker | Sonnet 5 / high | gpt-5.6-sol / medium | gpt-5.6-sol / medium |
+| reviewer | Opus 4.8 / high | gpt-5.6-sol / high | Opus 4.8 / high |
+
+- **呼び出し方**：Claude モデルは Task の `model` 指定（`opus` / `sonnet` / `fable`）で呼び、effort はセッション既定を継承する。GPT モデルは `~/.claude/agents/` の agent 定義（`gpt-medium` / `gpt-high` / `gpt-xhigh`）で呼び、effort は定義の frontmatter が決める
+- **昇格**：反証ゲートの高リスク基準（safety / security / migration / cross-layer / 複数 consumer / DB hot path）に触れる対象への falsifier / reviewer は、main が spawn 前に 1 段上へ昇格する。Opus 4.8 → Fable 5（effort はセッション既定）、gpt-5.6-sol high → xhigh
+- **fallback**：GPT の agent 定義が無い環境（プロキシを経由しない直結環境など）では、クロスモデル列を使わず「Claude のみ」列で全役割を賄う。Claude subagent が無い環境では「Codex」列で賄う
 
 ## 進め方
 
