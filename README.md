@@ -2,11 +2,15 @@
 
 Claude Code / Codex などの AI Agent で使うドキュメントやスキルを管理し、GitHub 経由で複数 PC から同じ内容を参照するためのリポジトリです。
 
-`skills/` 配下のスキルと `rules/` 配下の共通指示ファイルを配布します。
+`skills/` 配下のスキルと `rules/` 配下の共通指示ファイル、`agents/` 配下の agent 定義を配布します。
 
 ## 構成
 
 ```text
+agents/
+  gpt-medium.md
+  gpt-high.md
+  gpt-xhigh.md
 skills/
   dig/
     SKILL.md
@@ -41,6 +45,7 @@ rules/
 scripts/
   link-skills.sh
   link-rules.sh
+  link-agents.sh
   link-project-rules.sh
 Makefile
 AGENTS.md
@@ -54,6 +59,7 @@ CLAUDE.md
 - スキルの配布は `~/.claude/skills` / `~/.codex/skills` への symlink で行います。
 - Codex 向け共通指示の配布は `~/.codex/AGENTS.md` への symlink で行います。
 - Claude Code 向け共通指示の配布は `~/.claude/CLAUDE.md` の wrapper 生成で行います。
+- GPT worker agent 定義の配布は `~/.claude/agents/` への symlink で行います。配布先は Claude Code のみで、Codex には agent 定義の概念がないため配布しません。
 - 公開リポジトリなので、秘密情報・API key・認証情報・個人用 cache はコミットしません。
 - 全プロジェクト共通のルール本文は `rules/AGENTS.md` に集約します。エージェントの挙動・ドキュメント・メモリ・Git 運用のルールを置き、判断を伴わない整形規約は置きません。
 - Kotlin / Jetpack Compose プロジェクト向けの規約は `rules/kotlin.md` に置き、各プロジェクトの CLAUDE.md / AGENTS.md から参照して使います。静的解析で判定できる規約は `rules/lint/` のテンプレートを取り込んだ detekt / compose-rules 設定で強制します。
@@ -68,13 +74,13 @@ Codex の PC ごとの個人環境設定は [docs/codex-local-setup.md](docs/cod
 make status
 ```
 
-スキルと共通指示ファイルを配布します。
+スキルと共通指示ファイル、agent 定義を配布します。
 
 ```bash
 make link
 ```
 
-Claude Code だけにリンクしたい場合は `TARGETS` を指定します。
+スキルと共通指示ファイルについて、Claude Code だけにリンクしたい場合は `TARGETS` を指定します（`link-agents` は配布先が Claude Code のみのため `TARGETS` を参照しません）。
 
 ```bash
 TARGETS=claude make link
@@ -86,16 +92,25 @@ TARGETS=claude make link
 make unlink
 ```
 
-スキルと共通指示ファイルは個別にも操作できます。
+スキル・共通指示ファイル・agent 定義は個別にも操作できます。
 
 ```bash
 make status-skills
 make status-rules
+make status-agents
 make link-skills
 make link-rules
+make link-agents
 make unlink-skills
 make unlink-rules
+make unlink-agents
 ```
+
+### agent 定義（GPT worker）の運用
+
+`agents/` は CLIProxy 経由で GPT を Claude Code の subagent として使うための agent 定義（`model:` / `effort:` を持つ frontmatter）を置きます。`make link-agents` で `agents/*.md` を `~/.claude/agents/` へファイル単位の symlink として配布します。
+
+effort 別に使う agent ファイルを増減する場合は、`agents/` にファイルを追加または削除して `make link-agents` / `make unlink-agents` を再実行するだけです。スクリプトは `agents/*.md` を動的に走査するため、ファイル名やスクリプト自体の変更は不要です。
 
 ### OpenSpec の導入
 
@@ -132,6 +147,7 @@ make unlink-project PROJECT=~/dev/App/OneNavi
 - `unlink` はこのリポジトリを指している symlink と generated wrapper だけを削除します。
 - `scripts/link-skills.sh` は `skills/` 配下だけを配布対象にします。
 - `scripts/link-rules.sh` は `rules/AGENTS.md` を配布対象にします。
+- `scripts/link-agents.sh` は `agents/*.md` を配布対象にし、`~/.claude/agents/` へファイル単位で symlink します。
 - `scripts/link-project-rules.sh` の管理ブロックはプロジェクトのリポジトリにコミットされる前提です。他のコントリビューターや別 PC でも Agents リポジトリなしでそのまま機能します。
 - `unlink-project` は管理ブロックだけを削除します。`CLAUDE.md` と lint ファイルは残します。
 - `~/.claude/CLAUDE.md` は `rules/AGENTS.md` と `~/.claude/RTK.md` を参照する generated wrapper として作成します。
