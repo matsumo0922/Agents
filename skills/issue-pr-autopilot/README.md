@@ -98,7 +98,7 @@ sequenceDiagram
 
 ## リンク
 
-リポジトリ root で以下を実行すると、`~/.claude/skills/issue-pr-autopilot` と `~/.codex/skills/issue-pr-autopilot` に symlink を作成できます。反証ゲートが falsify スキルを、Claude サブエージェントが無い環境では claude-rescue を参照するため、bundle での一括配布を前提とします。
+リポジトリ root で以下を実行すると、`~/.claude/skills/issue-pr-autopilot` と `~/.codex/skills/issue-pr-autopilot` に symlink を作成できます。反証ゲートが falsify スキルを参照するため、bundle での一括配布を前提とします。
 
 ```bash
 make link

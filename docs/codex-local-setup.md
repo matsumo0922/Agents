@@ -4,28 +4,6 @@
 
 公開リポジトリに入る内容なので、secret、API key、credential の値は書きません。個人用 cache や認証ファイルもコミットしません。
 
-## Claude bridge の Auto-review 設定
-
-Codex から `claude-rescue` を実行すると Auto-review で弾かれる場合があります。Agents checkout にある bridge の絶対パスを確認します。
-
-```bash
-realpath skills/claude-rescue/scripts/claude-bridge.sh
-```
-
-出力された絶対パスを使い、`~/.codex/rules/default.rules` に次の rule を追加します。
-
-```python
-prefix_rule(
-    pattern = [
-        "/absolute/path/to/Agents/skills/claude-rescue/scripts/claude-bridge.sh",
-    ],
-    decision = "allow",
-    justification = "Allow the owner-approved Claude review bridge without repeated Auto-review prompts.",
-)
-```
-
-Codex は起動時に rule を読み込むため、`default.rules` を編集した後は Codex を開き直すか、新しい session を開始します。
-
 ## Gradle cache
 
 Codex sandbox 内で Gradle を実行する環境では、Gradle の user home を writable root 配下に置きます。Gradle は dependency cache や wrapper の配布物を user home に書き込むため、sandbox から書き込み可能な場所を指定すると `make test` や `make detekt` 経由の Gradle 実行にも同じ設定が効きます。
