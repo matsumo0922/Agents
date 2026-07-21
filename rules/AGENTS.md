@@ -16,6 +16,10 @@ Claude Code / Codex 共通のグローバル指示。プロジェクト固有の
 - プランニングで仕様判断が必要な点が残っている場合は、質問ツール（Claude Code では AskUserQuestion、Codex では request_user_input）でユーザーに確認する。質問は対話セッション中のプランニングに限り、自走実行中は妥当な仮定を置いて進める
 - 複雑なプランを提示する際は、処理の流れを例・思考実験・比喩を用いて分かりやすく説明する
 
+### Claude Code のサブエージェント
+
+- Agent tool で `gpt-medium` / `gpt-high` / `gpt-xhigh` を起動するときは、各インスタンスに一意な `name` を必ず指定する。`name` のない中間 agent がさらに teammate を起動すると、子に見える `teammate_id` が agent type のラベルになり、`SendMessage` の返信先として解決できないため
+
 ## ドキュメント
 
 - 実装や仕様変更を行ったら、同じ PR 内で影響するドキュメント（README / docs/ / KDoc）を更新する。後追いの docs 専用 PR を作らない

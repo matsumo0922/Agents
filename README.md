@@ -115,6 +115,19 @@ make unlink-agents
 
 effort 別に使う agent ファイルを増減する場合は、`agents/` にファイルを追加または削除して `make link-agents` / `make unlink-agents` を再実行するだけです。スクリプトは `agents/*.md` を動的に走査するため、ファイル名やスクリプト自体の変更は不要です。
 
+Claude Code の Agent tool で main から GPT worker を起動するときは、各インスタンスに一意な `name` を指定します。`description` や agent type（`gpt-medium` / `gpt-high` / `gpt-xhigh`）は、`SendMessage` で解決できるインスタンス名の代わりにはなりません。中間の GPT worker に `name` がないと、子から見える `teammate_id` が agent type のラベルになり、返信先として解決できません。
+
+```text
+Agent(
+  subagent_type="gpt-xhigh",
+  name="fukurou-evidence-auditor",
+  description="本番障害の証拠を裏取り",
+  ...
+)
+```
+
+一意な `name` で起動された GPT worker は teammate になります。team roster は flat であり、teammate はさらに `name` 付き teammate を起動できません。GPT worker が多段委譲するときは、child Agent の `name` を省略し、`run_in_background: false` の同期 subagent として起動して、Agent の戻り値から結果を回収します。nested teammate、background agent、`SendMessage` の返信による結果回収は使用しません。
+
 ### OpenSpec の導入
 
 issue-pr-autopilot は、対象プロジェクトに [OpenSpec](https://github.com/Fission-AI/OpenSpec) が導入されていることを前提とします。未導入のプロジェクトでは autopilot は停止するか、自明な単一レイヤー変更に限定したフォールバックで動作します。プロジェクトごとに次を実行して導入します。
