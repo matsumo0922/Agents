@@ -63,7 +63,11 @@ main は常にセッションのモデル。subagent は実行環境ごとに次
 
 ## 進め方
 
-### 1. worktree と propose
+### 1. 割当を確認
+
+architect（委任時）, falsifier, worker, reviewer のそれぞれについて、使用するモデル名と effort を表にして明示する。反証ゲートの高リスク基準に該当し、昇格を行う際はその旨を明示し、質問 tool で昇格を行なって良いかユーザーに確認を取る。
+
+### 2. worktree と propose
 
 - 兄弟ディレクトリに worktree + branch を作る。propose より先に行い、main checkout を汚さない。検証に必要な未追跡ファイル（`local.properties` / `.env` 等）だけをコピーし、.gitignore に守られていることを確認する
 - worktree 内で、merge 済みで未 archive の change を `openspec archive <name> --yes` で回収する。回収対象は「tasks が全完了、または対応 PR が merged の change」のみ（進行中 change の誤 archive を防ぐため）。archive 差分はこの run の最初の commit に含め、PR で人間が確認できるようにする
@@ -72,11 +76,11 @@ main は常にセッションのモデル。subagent は実行環境ごとに次
 - 設計上の各決定には帰属タグ（ユーザー確認済み / agent 仮決め / 高リスク・要人間確認）を付ける。高リスク未検証前提の 3 分岐プロトコルと質問の作法は falsify スキルの規約に従う
 - stage 分割を行う場合（falsify のスコープ判定が blocking として検出し、処置の stage-out / 人間判断から入る）は、stage ごとに独立の change + PR とする。受け入れ条件との対応（この stage / 後続 stage / non-goal）を proposal.md に記録し、残 stage は issue にコメントで残す
 
-### 2. 反証ゲート
+### 3. 反証ゲート
 
 safety / security / migration / cross-layer / 複数 consumer / DB hot path に触れる提案は、falsify スキルの独立 falsifier に proposal + delta spec を反証させる。blocking 反例が解消される（falsify の処置 4 ルートのいずれかで閉じる）まで実装に入らない。
 
-### 3. 実装（apply）
+### 4. 実装（apply）
 
 apply の意味論は本スキルが定義する（OpenSpec のスラッシュコマンド実体に依存せず、CLI と change 名だけで完結させる）。`openspec instructions apply --change <name> --json` が返す contextFiles をすべて読み、tasks.md を上から消化して `- [x]` を付け、意味のある粒度で commit する。実装中に設計の欠陥が判明したら artifacts を更新してから続ける。
 
