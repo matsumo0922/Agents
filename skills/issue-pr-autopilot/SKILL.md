@@ -57,8 +57,8 @@ main は常にセッションのモデル。subagent は実行環境ごとに次
 | worker              | Sonnet 5 / high            | gpt-5.6-sol / medium | gpt-5.6-sol / medium        |
 | reviewer            | Opus 5 / high              | gpt-5.6-sol / high   | Opus 5 / high               |
 
-- **呼び出し方**：Claude モデルは `~/.claude/agents/` の role-specific agent 定義（`autopilot-architect` / `autopilot-falsifier` / `autopilot-worker` / `autopilot-reviewer`）で呼び、model と effort は定義の frontmatter で固定する。GPT モデルも同じ場所の agent 定義（`gpt-medium` / `gpt-high` / `gpt-xhigh`）で呼ぶ
-- **昇格**：反証ゲートの高リスク基準（safety / security / migration / cross-layer / 複数 consumer / DB hot path）に触れる対象への falsifier / reviewer は、main が spawn 前に 1 段上へ昇格する。Opus 5 / high → Fable 5 / high（`autopilot-high-risk-falsifier` / `autopilot-high-risk-reviewer`）、gpt-5.6-sol / high → gpt-5.6-sol / xhigh
+- **呼び出し方**：Claude モデルは Agent tool の `model` 指定（`opus` / `sonnet` / `fable`）で呼び、effort はセッション既定を継承する。GPT モデルは `~/.claude/agents/` の agent 定義（`gpt-medium` / `gpt-high` / `gpt-xhigh`）で呼び、effort は定義の frontmatter が決める
+- **昇格**：反証ゲートの高リスク基準（safety / security / migration / cross-layer / 複数 consumer / DB hot path）に触れる対象への falsifier / reviewer は、main が spawn 前に 1 段上へ昇格する。Opus 5 → Fable 5（effort はセッション既定）、gpt-5.6-sol / high → gpt-5.6-sol / xhigh
 - **fallback**：GPT の agent 定義が無い環境（プロキシを経由しない直結環境など）では、クロスモデル列を使わず「Claude のみ」列で全役割を賄う。Claude subagent が無い環境では「Codex」列で賄う
 
 ## 進め方

@@ -172,9 +172,9 @@ effort の効果を検証する際は、タイムアウトやエラー応答を�
 
 ## 8. subagent での GPT 利用
 
-Claude Code の Agent tool は呼び出しごとに model を指定できるが、role ごとの model と effort を確実に固定するには custom agent 定義を使う。agent 定義の frontmatter は Claude alias、full model ID、`inherit` を `model:` に指定でき、`effort:` も role ごとに指定できる。詳細は Claude Code 公式の [custom subagents](https://code.claude.com/docs/en/sub-agents) と [model configuration](https://code.claude.com/docs/en/model-config) を参照する。
+Claude Code の Task（Agent）ツールが受け取る `model` パラメータは、`sonnet` / `opus` / `haiku` / `fable` の Claude alias に限定された enum であり、`gpt-5.6-sol` のような GPT のモデル名を直接渡すことはできない。また Task ツールに `effort` 引数は存在しない。そのため、呼び出し元（main エージェント）がタスク実行時にモデルや effort を動的に指定して GPT の subagent を起動することはできない。
 
-CLIProxy 経由で GPT を使う場合も、`.claude/agents/*.md` の agent 定義ファイルの frontmatter に `model:` と `effort:` を明示する。frontmatter の `model:` は full model ID を書けるため、GPT のモデル名も直接指定できる。
+この制約を回避する唯一の実用的な方法は、`.claude/agents/*.md` の agent 定義ファイルの frontmatter に `model:` と `effort:` を明示することである。frontmatter の `model:` は enum 制限のないフリーテキストであり、GPT のモデル名を直接書ける。
 
 ```yaml
 ---
@@ -185,11 +185,11 @@ effort: high
 ---
 ```
 
-この方式では、model と effort の組み合わせ、または model / effort を固定したい role ごとに agent ファイルを 1 枚作成し、main エージェントは用途に応じて agent 名で呼び分ける。effort の段階を増減したい場合は、対応する agent ファイルを追加・削除するだけでよい。
+この方式では、model と effort の組み合わせごとに agent ファイルを 1 枚作成し、main エージェントは用途に応じて agent 名で呼び分ける。effort の段階を増減したい場合は、対応する agent ファイルを追加・削除するだけでよい。
 
-Claude 系モデルは呼び出し時に alias または full model ID を直接指定できるが、role-specific な effort をセッション設定から独立させる場合は agent 定義を使う。本リポジトリの `agents/autopilot-*.md` がこの用途に当たる。
+Claude 系モデル（opus / sonnet / haiku / fable）は標準の alias enum に含まれているため、agent 定義ファイルを用意する必要はなく、main エージェントが Task の `model:` パラメータで直接指定できる。agent ファイルが必要になるのは enum に含まれない GPT 系モデルのみである。
 
-本リポジトリで配布している Claude role 定義（`agents/autopilot-*.md`）と GPT worker 定義（`agents/gpt-medium.md` / `agents/gpt-high.md` / `agents/gpt-xhigh.md`）は、この方式の実装例である。配布方法は [README.md](../README.md) の「agent 定義（Claude / GPT subagent）の運用」を参照する。
+本リポジトリで配布している GPT worker agent 定義（`agents/gpt-medium.md` / `agents/gpt-high.md` / `agents/gpt-xhigh.md`）は、この方式の実装例である。配布方法は [README.md](../README.md) の「agent 定義（GPT worker）の運用」を参照する。
 
 ### 多段 subagent の返信経路
 
