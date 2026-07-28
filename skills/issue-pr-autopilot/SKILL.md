@@ -52,13 +52,13 @@ main は常にセッションのモデル。subagent は実行環境ごとに次
 
 | 役割                | Claude Code（Claude のみ） | Codex（GPT のみ）    | Claude Code（クロスモデル） |
 |---------------------|----------------------------|----------------------|-----------------------------|
-| architect（委任時） | Opus 4.8 / high            | gpt-5.6-sol / medium | Opus 4.8 / high             |
-| falsifier           | Opus 4.8 / high            | gpt-5.6-sol / high   | gpt-5.6-sol / high          |
+| architect（委任時） | Opus 5 / high              | gpt-5.6-sol / medium | Opus 5 / high               |
+| falsifier           | Opus 5 / high              | gpt-5.6-sol / high   | gpt-5.6-sol / high          |
 | worker              | Sonnet 5 / high            | gpt-5.6-sol / medium | gpt-5.6-sol / medium        |
-| reviewer            | Opus 4.8 / high            | gpt-5.6-sol / high   | Opus 4.8 / high             |
+| reviewer            | Opus 5 / high              | gpt-5.6-sol / high   | Opus 5 / high               |
 
-- **呼び出し方**：Claude モデルは Task の `model` 指定（`opus` / `sonnet` / `fable`）で呼び、effort はセッション既定を継承する。GPT モデルは `~/.claude/agents/` の agent 定義（`gpt-medium` / `gpt-high` / `gpt-xhigh`）で呼び、effort は定義の frontmatter が決める
-- **昇格**：反証ゲートの高リスク基準（safety / security / migration / cross-layer / 複数 consumer / DB hot path）に触れる対象への falsifier / reviewer は、main が spawn 前に 1 段上へ昇格する。Opus 4.8 → Fable 5（effort はセッション既定）、gpt-5.6-sol high → xhigh
+- **呼び出し方**：Claude モデルは Agent tool の `model` 指定（`opus` / `sonnet` / `fable`）で呼び、effort はセッション既定を継承する。GPT モデルは `~/.claude/agents/` の agent 定義（`gpt-medium` / `gpt-high` / `gpt-xhigh`）で呼び、effort は定義の frontmatter が決める
+- **昇格**：反証ゲートの高リスク基準（safety / security / migration / cross-layer / 複数 consumer / DB hot path）に触れる対象への falsifier / reviewer は、main が spawn 前に 1 段上へ昇格する。Opus 5 → Fable 5（effort はセッション既定）、gpt-5.6-sol / high → gpt-5.6-sol / xhigh
 - **fallback**：GPT の agent 定義が無い環境（プロキシを経由しない直結環境など）では、クロスモデル列を使わず「Claude のみ」列で全役割を賄う。Claude subagent が無い環境では「Codex」列で賄う
 
 ## 進め方
@@ -66,6 +66,8 @@ main は常にセッションのモデル。subagent は実行環境ごとに次
 ### 1. 割当を確認
 
 architect（委任時）, falsifier, worker, reviewer のそれぞれについて、使用するモデル名と effort を表にして明示する。反証ゲートの高リスク基準に該当し、昇格を行う際はその旨を明示し、質問 tool で昇格を行なって良いかユーザーに確認を取る。
+
+進捗報告は開始時、phase 完了時、重要な発見、方針変更、block 発生時だけ行う。コマンド単位の予告や、既に明らかな次工程の実況は行わない。最終報告は結果から始め、必要な詳細を後に置く。
 
 ### 2. worktree と propose
 
@@ -84,9 +86,9 @@ safety / security / migration / cross-layer / 複数 consumer / DB hot path に�
 
 apply の意味論は本スキルが定義する（OpenSpec のスラッシュコマンド実体に依存せず、CLI と change 名だけで完結させる）。`openspec instructions apply --change <name> --json` が返す contextFiles をすべて読み、tasks.md を上から消化して `- [x]` を付け、意味のある粒度で commit する。実装中に設計の欠陥が判明したら artifacts を更新してから続ける。
 
-- main が実装するのが既定。長大な実装は fresh worker に委任し、brief には issue の文脈、tasks.md の場所、検証の期待を含める
+- main が実装するのが既定。長大な実装は fresh worker に委任する。brief には目的、受け入れ条件、scope、non-goal、参照先（パス / SHA / URL）、許可された変更、禁止された変更、完了条件、検証責任、返却形式を最初からまとめて渡す
 - **発見事項**：実装中に見つけた、受け入れ条件にも設計決定にも紐付かない欠陥や改善点は修正せず、完了報告に列挙だけする（worker が委任先の場合は worker が main へ返す）。main は follow-up 提案として issue にコメントするか PR の残事項に記録する。tasks.md に無い作業を発見を理由に追加しない
-- **検証 tier**：初回実装 = full（test / lint / build）、レビュー修正 = compile + 修正対象の targeted tests、承認前の最終 HEAD = full を 1 回。最終 full を見込みで先行実行しない
+- **検証 tier**：初回実装 = full（test / lint / build）、レビュー修正 = compile + 修正対象の targeted tests、承認前の最終 HEAD = full を 1 回。最終 full を見込みで先行実行しない。明示された tier 以外に、安心のためだけの再実行、自己 review、追加 reviewer を足さない。追加検証は、失敗、未確認事項、具体的な risk が新たに見つかった場合だけ行う
 - **検証記録**：コマンド、結果、実行時 HEAD SHA、scope を残す。PR 作成後は PR description の検証セクションを正とし、PR 作成前は worktree 内の一時ノートに残して所在を reviewer への brief に含める。Scenario ごとの証明はテスト名 + SHA で示す
 - **production call path**：新しい機能や安全機構には、手組み入力だけで通る unit テストでなく、本番エントリポイントからの配線経由で実際に発動することを確認するテストを要求する。本番経路のテストが書けない場合は理由を明記し、reviewer の重点確認対象とする（純粋な docs 変更等、経路が存在しない場合は「該当なし + 理由」で受理できる）
 
@@ -107,6 +109,7 @@ push して PR を作る（delta spec も同じ PR に含める）。title は�
 reviewer（clean context）に PR、Scenario 一覧、検証記録を渡す。
 
 - **意図アンカー**：各指摘は「delta spec の Requirement/Scenario ∪ 暗黙の非退行 invariant（変更が既存の正しい挙動を壊さない）」のどれを守るための指摘かに紐付く。今回の diff が導入または悪化させた correctness / security / safety / 互換性の regression は非退行 invariant にアンカーできる。既存で未変更の欠陥はアンカー不可で、must-fix でなく follow-up 提案として報告する（報告自体は妨げない）
+- **finding の列挙**：今回の diff が導入または悪化させた、根拠を示せる finding は severity で事前に間引かず列挙する。各 finding には再現条件、影響、根拠箇所、意図アンカーを付ける。severity と今回対応すべきかは main が別工程で裁定する
 - **信頼チェーン**：reviewer は build / test / lint を再実行せず、検証記録を信頼してコードだけをレビューする。ただし開始前に「検証記録の最終 SHA == 現在の HEAD」を read-only で照合し、不一致または scope 不足ならレビューせず差し戻す
 - **severity**：must-fix = 受け入れ条件違反、または発生条件を特定できる証明可能な欠陥（データ破壊、race、security、互換性、設計欠陥）。should = 品質や保守性への実害。nit = 好みで、既定処置は「対応不要（記録のみ）」
 - **有限 inventory**：must-fix を 1 件見つけたら問題クラスとして一般化し、同根のインスタンスを grep / call graph で列挙して ID を振った inventory として 1 グループで報告する。各 ID に修正を証明する観測（テスト名 / コマンド）を閉じる条件として付け、「全〜」「〜など」の開いた表現を認めない
@@ -116,7 +119,7 @@ main が指摘を裁定する（4 分類：design defect / 今回必須 / follow
 
 修正と再レビューは次のとおり進める。
 
-- 修正は finding cluster ごとに fresh worker に委任する（根本原因を特定し、同根の経路を列挙してから一括修正）。再検証は修正した実装者が行い、main や reviewer は代行しない
+- 長大な修正は原則として 1 review round につき 1 fresh worker にまとめて委任する。cluster を別 worker へ分割するのは、互いに独立し、各 cluster が単独でも長大な実装になる場合だけとする。小さな修正は main が直接反映し、repo 探索や自己検証だけを目的に worker を spawn しない。worker は根本原因を特定し、同根の経路を列挙してから一括修正する。再検証は main を含む修正実装者が行い、reviewer は代行しない
 - 再レビューは inventory ID 単位で CLOSED / PARTIAL（未充足 ID の列挙）/ NEW を判定し、同一指摘の要求を後続ラウンドで拡張しない（inventory 外の経路を後から見つけたら NEW の新規指摘とする）
 - 修正コミットが新規に持ち込みやすい欠陥クラス（cache / lock / transaction の境界、置換前後の等価性。消えた LIMIT、bind されない変数）を再レビューで確認する
 - 指摘対応に新 layer や新規サブシステムが必要になったら、修正の積み増しでなく default-off 隔離 + 別 change への切り出しを既定とする

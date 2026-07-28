@@ -63,8 +63,12 @@ sequenceDiagram
     Main->>GH: 妥当な指摘だけ PR コメント投稿
 
     loop 収束している間（must-fix が減り続ける間）
-        Main->>Wkr: 修正 brief（fresh worker / 裁定者と分離）
-        Wkr-->>Main: 修正報告
+        alt 長大な修正
+            Main->>Wkr: 修正 brief（1 fresh worker / 裁定者と分離）
+            Wkr-->>Main: 修正報告 + 再検証
+        else 小さな修正
+            Main->>Main: 裁定済み修正を直接反映 + 再検証
+        end
         Main->>Rev: 差分だけ再レビュー依頼
         Rev-->>Main: CLOSED / PARTIAL / NEW
     end
@@ -83,7 +87,7 @@ sequenceDiagram
 
 ## 設計の要点
 
-- **main がリード役**：文脈を全部持つ main が propose、実装、裁定、収束判定を自分で行い、clean context の隔離は敵対的役割（falsifier / reviewer）に限定します。worker は長大な実装とレビュー修正ラウンド（裁定者と修正者の分離）でのみ fresh spawn します
+- **main がリード役**：文脈を全部持つ main が propose、実装、裁定、収束判定を自分で行い、clean context の隔離は敵対的役割（falsifier / reviewer）に限定します。worker は長大な実装とレビュー修正ラウンド（裁定者と修正者の分離）でのみ fresh spawn し、レビュー修正は原則として 1 round につき 1 worker にまとめます
 - **正本の二層定義**：契約の正本は issue の受け入れ条件、実行時の検証単位は delta spec の Scenario。食い違いは停止して質問します
 - **意図アンカー**：指摘の紐付け先は「delta spec の Requirement/Scenario ∪ 暗黙の非退行 invariant」。既存で未変更の欠陥は must-fix にせず follow-up 提案に分類します
 - **最小充足と発見事項**：提案は受け入れ条件を満たす最小のものを既定とし、拡張は反証・レビュー・検証が実際に失敗を示した場合にのみ行います。実装中に見つけた紐付かない欠陥や改善点は修正せず、発見事項として列挙し follow-up に回します
