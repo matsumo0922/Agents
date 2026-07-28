@@ -119,7 +119,7 @@ main が指摘を裁定する（4 分類：design defect / 今回必須 / follow
 
 修正と再レビューは次のとおり進める。
 
-- 修正は原則として 1 review round につき 1 fresh worker にまとめて委任する。cluster を別 worker へ分割するのは、互いに独立し、各 cluster が単独でも長大な実装になる場合だけとする。小さな修正、repo 探索、自己検証を目的に worker を spawn しない。worker は根本原因を特定し、同根の経路を列挙してから一括修正する。再検証は修正した実装者が行い、main や reviewer は代行しない
+- 長大な修正は原則として 1 review round につき 1 fresh worker にまとめて委任する。cluster を別 worker へ分割するのは、互いに独立し、各 cluster が単独でも長大な実装になる場合だけとする。小さな修正は main が直接反映し、repo 探索や自己検証だけを目的に worker を spawn しない。worker は根本原因を特定し、同根の経路を列挙してから一括修正する。再検証は main を含む修正実装者が行い、reviewer は代行しない
 - 再レビューは inventory ID 単位で CLOSED / PARTIAL（未充足 ID の列挙）/ NEW を判定し、同一指摘の要求を後続ラウンドで拡張しない（inventory 外の経路を後から見つけたら NEW の新規指摘とする）
 - 修正コミットが新規に持ち込みやすい欠陥クラス（cache / lock / transaction の境界、置換前後の等価性。消えた LIMIT、bind されない変数）を再レビューで確認する
 - 指摘対応に新 layer や新規サブシステムが必要になったら、修正の積み増しでなく default-off 隔離 + 別 change への切り出しを既定とする

@@ -63,8 +63,12 @@ sequenceDiagram
     Main->>GH: 妥当な指摘だけ PR コメント投稿
 
     loop 収束している間（must-fix が減り続ける間）
-        Main->>Wkr: 修正 brief（fresh worker / 裁定者と分離）
-        Wkr-->>Main: 修正報告
+        alt 長大な修正
+            Main->>Wkr: 修正 brief（1 fresh worker / 裁定者と分離）
+            Wkr-->>Main: 修正報告 + 再検証
+        else 小さな修正
+            Main->>Main: 裁定済み修正を直接反映 + 再検証
+        end
         Main->>Rev: 差分だけ再レビュー依頼
         Rev-->>Main: CLOSED / PARTIAL / NEW
     end
