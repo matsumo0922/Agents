@@ -25,7 +25,7 @@ cross-layer / safety / migration / security / 複数 consumer / DB hot path の�
 
 - falsifier は clean context のサブエージェントとして起動し、反証対象とリポジトリ（読み取り専用）だけを渡す。書き手の弁明、検討の経緯、会話履歴は渡さない
 - falsify の本質は「書き手と別の clean context」であり、特定モデルであることではない。Codex 環境では Codex 自身のサブエージェント（spawn）で clean context の falsifier を立てる
-- モデルの既定: Claude subagent を使える環境では Opus 4.8（effort はセッション既定を継承）、GPT を使える環境では gpt-5.6-sol / high（`gpt-high` agent）。反証対象が発動判定の高リスク基準に触れる場合、呼び出し側が spawn 前に 1 段上（Fable 5、または gpt-5.6-sol / xhigh）へ昇格する。issue-pr-autopilot から呼ばれる場合の環境別の割当表は同スキルの「モデル割当」を正とする
+- モデルの既定: Claude subagent を使える環境では Opus 5 / high（`autopilot-falsifier` agent）、GPT を使える環境では gpt-5.6-sol / high（`gpt-high` agent）。反証対象が発動判定の高リスク基準に触れる場合、呼び出し側が spawn 前に 1 段上（Fable 5 / high の `autopilot-high-risk-falsifier`、または gpt-5.6-sol / xhigh）へ昇格する。issue-pr-autopilot から呼ばれる場合の環境別の割当表は同スキルの「モデル割当」を正とする
 
 ## falsifier の職掌
 
