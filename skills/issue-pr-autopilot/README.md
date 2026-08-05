@@ -101,7 +101,9 @@ sequenceDiagram
 
 - **main がリード役**：文脈を全部持つ main が propose、配送単位の決定、実装、裁定、収束判定を自分で行い、clean context の隔離は敵対的役割（falsifier / reviewer）に限定します。worker は長大な実装とレビュー修正ラウンド（裁定者と修正者の分離）でのみ fresh spawn し、レビュー修正は原則として 1 round につき 1 worker にまとめます
 - **配送単位の一貫性**：1 issue の intent は 1 change として propose し、分割は PR（配送）の層で行います。Stack の変異操作（init / add / checkout / push / submit / rebase / sync / unstack）は main 専権で、worker は担当 layer の外を触らず main へエスカレーションします
-- **正本の二層定義**：契約の正本は issue の受け入れ条件、実行時の検証単位は delta spec の Scenario。食い違いは停止して質問します
+- **正本の二層定義**：契約の正本は issue の受け入れ条件、実行時の検証単位は delta spec の Scenario。食い違いは fail-safe 側の最小解釈で進み、（高リスク・要人間確認）タグで人間確認事項へ転記します
+- **コード形状の規範（ladder）**：スコープだけでなくコードの形にも最小充足を適用します。「不要なら書かない → 既存の再利用 → stdlib → platform native → 導入済み依存 → 1 行 → 最小実装」の ladder に従い、実装 1 つの interface や将来のための scaffolding を作りません。意図的な簡略化は `ponytail:` コメントで上限と upgrade path を残し、人間確認事項へ転記します。trust boundary の入力検証・データ損失を防ぐエラー処理・security 対策は簡略化の対象外です
+- **迷ったら lazy 版で前進**：解釈が割れても停止せず、最小解釈（lazy 版）を実装して採らなかった解釈を質問として同一報告に残します。高リスク領域でも fail-safe 側の仮決め + タグ可視化で進みます。テストは「壊れたら落ちる最小の 1 チェック」を下限とし、本番配線の確認は人間レビューに委ねます
 - **意図アンカー**：指摘の紐付け先は「delta spec の Requirement/Scenario ∪ 暗黙の非退行 invariant」。既存で未変更の欠陥は must-fix にせず follow-up 提案に分類します
 - **最小充足と発見事項**：提案は受け入れ条件を満たす最小のものを既定とし、拡張は反証・レビュー・検証が実際に失敗を示した場合にのみ行います。実装中に見つけた紐付かない欠陥や改善点は修正せず、発見事項として列挙し follow-up に回します
 - **収束性による停止**：round ごとの未解消 must-fix 数（Stack では全 PR の合算）が減っている限り続行し、停滞したら HANDOFF します。round 数上限や時間では打ち切りません
