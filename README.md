@@ -83,7 +83,7 @@ make status
 make link
 ```
 
-`make link` と `make status`（skills 分）は、本リポジトリ管理外の外部前提スキル（gh-stack、ponytail / ponytail-review）が配布先に存在するかも確認します。見つからない場合は `external missing` の警告を表示しますが、link 自体は成功します（各スキルは不在時の fallback を定義しています）。
+`make link` と `make status`（skills 分）は、本リポジトリ管理外の外部前提スキル（gh-stack、ponytail / ponytail-review）が配布先に存在するかも確認します。存在判定は agent 固有の skills ディレクトリ（`~/.claude/skills` / `~/.codex/skills`）に加え、agent が共通で探索する `~/.agents/skills` も対象です。見つからない場合は `external missing` の警告を表示しますが、link 自体は成功します（各スキルは不在時の fallback を定義しています）。
 
 スキルと共通指示ファイルについて、Claude Code だけにリンクしたい場合は `TARGETS` を指定します（`link-agents` は配布先が Claude Code のみのため `TARGETS` を参照しません）。
 

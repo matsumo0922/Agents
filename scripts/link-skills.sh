@@ -10,7 +10,10 @@ TIMESTAMP="$(date +%Y%m%d%H%M%S)"
 
 # issue-pr-autopilot / falsify が optional な前提として参照する、本リポジトリ管理外のスキル。
 # 見つからなくても link は成功させ、警告だけを表示する（各スキルは不在時の fallback を定義済み）。
+# 存在チェックは agent 固有の skills ディレクトリに加え、agent が共通で探索する
+# ~/.agents/skills も対象にする（Codex は ~/.agents 配下のスキルも認識するため）。
 EXTERNAL_SKILLS="gh-stack ponytail ponytail-review"
+SHARED_SKILLS_DIR="$HOME/.agents/skills"
 
 usage() {
   cat <<'EOF'
@@ -164,9 +167,11 @@ check_external_skill() {
 
   if [ -f "$destination_path/SKILL.md" ]; then
     printf 'external ok %s/%s\n' "$agent_name" "$skill_name"
+  elif [ -f "$SHARED_SKILLS_DIR/$skill_name/SKILL.md" ]; then
+    printf 'external ok %s/%s (via %s)\n' "$agent_name" "$skill_name" "$SHARED_SKILLS_DIR"
   else
-    printf 'external missing %s/%s: install it into %s (autopilot falls back without it)\n' \
-      "$agent_name" "$skill_name" "$(target_dir "$agent_name")" >&2
+    printf 'external missing %s/%s: install it into %s or %s (autopilot falls back without it)\n' \
+      "$agent_name" "$skill_name" "$(target_dir "$agent_name")" "$SHARED_SKILLS_DIR" >&2
   fi
 }
 
