@@ -10,6 +10,7 @@ GitHub issue や作業説明を起点に、OpenSpec の propose→apply を専�
 - 対象プロジェクトに `openspec/` が導入済みであること。未導入の場合、対話中はユーザーに init するか質問し、自走中は停止するか、自明な単一レイヤー変更に限り軽量フォールバック（設計を PR description に直書き）に切り替えます。ユーザーの確認なしに `openspec init` は実行しません
 - `gh` 認証
 - Stack 配送を使う場合は [gh-stack](https://github.com/github/gh-stack) 拡張（`gh extension install github/gh-stack`）と gh-stack スキル（非対話実行の Agent rules と exit code 表の参照先）、repository での GitHub Stacked PRs の有効化。Stack が使えない場合も、gh-stack が作成済みの連鎖 base の通常 PR をそのまま使う fallback で同じ配送単位を維持します
+- コード形状の規範を適用する場合は ponytail / ponytail-review スキル（ladder と 5 タグの正本）。読めない環境では規範と簡潔性 finding を不適用にして通常どおり進みます
 
 ## OpenSpec との役割分担
 
@@ -101,7 +102,9 @@ sequenceDiagram
 
 - **main がリード役**：文脈を全部持つ main が propose、配送単位の決定、実装、裁定、収束判定を自分で行い、clean context の隔離は敵対的役割（falsifier / reviewer）に限定します。worker は長大な実装とレビュー修正ラウンド（裁定者と修正者の分離）でのみ fresh spawn し、レビュー修正は原則として 1 round につき 1 worker にまとめます
 - **配送単位の一貫性**：1 issue の intent は 1 change として propose し、分割は PR（配送）の層で行います。Stack の変異操作（init / add / checkout / push / submit / rebase / sync / unstack）は main 専権で、worker は担当 layer の外を触らず main へエスカレーションします
-- **正本の二層定義**：契約の正本は issue の受け入れ条件、実行時の検証単位は delta spec の Scenario。食い違いは停止して質問します
+- **正本の二層定義**：契約の正本は issue の受け入れ条件、実行時の検証単位は delta spec の Scenario。食い違いは fail-safe 側の最小解釈で進み、（高リスク・要人間確認）タグで人間確認事項へ転記します
+- **コード形状の規範（ladder）**：スコープだけでなくコードの形にも最小充足を適用します。規範の正本は ponytail スキル（前提スキル）で、ladder（最小充足の 7 段）、`ponytail:` コメント規則、簡略化の対象外（trust boundary の入力検証・データ損失を防ぐエラー処理・security 対策）はそちらに従い、main が run 開始時に読んで worker / reviewer の brief へ展開します。ponytail が読めない環境ではこの規範と簡潔性 finding を不適用にして通常どおり進みます
+- **迷ったら lazy 版で前進**：解釈が割れても停止せず、最小解釈（lazy 版）を実装して採らなかった解釈を質問として同一報告に残します。高リスク領域でも fail-safe 側の仮決め + タグ可視化で進みます。テストは「壊れたら落ちる最小の 1 チェック」を下限とし、本番配線の確認は人間レビューに委ねます
 - **意図アンカー**：指摘の紐付け先は「delta spec の Requirement/Scenario ∪ 暗黙の非退行 invariant」。既存で未変更の欠陥は must-fix にせず follow-up 提案に分類します
 - **最小充足と発見事項**：提案は受け入れ条件を満たす最小のものを既定とし、拡張は反証・レビュー・検証が実際に失敗を示した場合にのみ行います。実装中に見つけた紐付かない欠陥や改善点は修正せず、発見事項として列挙し follow-up に回します
 - **収束性による停止**：round ごとの未解消 must-fix 数（Stack では全 PR の合算）が減っている限り続行し、停滞したら HANDOFF します。round 数上限や時間では打ち切りません

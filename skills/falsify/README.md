@@ -14,6 +14,8 @@
 - **モデルの既定**：Claude subagent を使える環境では Opus 5、GPT を使える環境では gpt-5.6-sol / high。高リスク基準（safety / security / migration / cross-layer 等）に触れる対象は、呼び出し側が spawn 前に 1 段上（Fable 5、または gpt-5.6-sol / xhigh）へ昇格します
 - **反証 5 ベクトル**：production fact との不一致 / invariant を破る反例 / failure 後の downstream state / safety direction / 負荷、容量、upgrade path
 - **blocking は自己承認で閉じられない**：設計修正、保証の縮退、stage-out、人間判断の 4 ルートのみで閉じ、解消確認は falsifier が行う
+- **スコープ判定は ladder 基準**：受け入れ条件に紐付かない拡張の混入は、ponytail スキルの ladder（最小充足の 7 段）を基準に判定し、より上の段で足りる設計要素を反例として挙げます。ladder の正本は ponytail スキルで、呼び出し側が falsifier の brief に展開して渡します
+- **高リスク未検証前提は fail-safe 仮決めで前進**：自走中に検証不能な高リスク前提に遭っても停止せず、fail-safe 側（既存状態を変更しない側）を仮決めし、（高リスク・要人間確認）マークと採らなかった選択肢の併記で可視化します。マークされた前提は reviewer の必須反証対象になります
 - **価値判断はユーザー専権**：リスク許容や運用方針はユーザーに質問で確定させ、agent の判断は帰属タグ（ユーザー確認済み / agent 仮決め / 高リスク・要人間確認）で可視化する
 
 dig との対称構造として、dig は設計前の対話反証（ユーザーと）を、falsify は設計後の独立反証（clean context）を担います。
