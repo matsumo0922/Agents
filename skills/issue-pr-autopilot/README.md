@@ -1,6 +1,6 @@
 # issue-pr-autopilot
 
-GitHub issue や作業説明を起点に、OpenSpec の propose→apply を専用 worktree 内で駆動し、反証ゲート、レビューループ、収束判定を経て、人間が短時間で merge 判断できる PR を自走で作る配送シェルです。
+GitHub issue や作業説明を起点に、OpenSpec の propose→apply を専用 worktree 内で駆動し、反証ゲート、レビューループ、収束判定を経て、人間が短時間で merge 判断できる PR（単一 PR または GitHub Stack）を自走で作る配送シェルです。
 
 品質保証の最終責任は人間の PR レビューが担い、内部ループで完璧を目指しません。終了状態は APPROVED（must-fix ゼロ + G 系ゲート成立）と HANDOFF（残指摘を整理して人間レビューへ引き継ぎ）の 2 つで、どちらも正常終了です。
 
@@ -9,15 +9,25 @@ GitHub issue や作業説明を起点に、OpenSpec の propose→apply を専�
 - [OpenSpec](https://github.com/Fission-AI/OpenSpec) CLI（`npm install -g @fission-ai/openspec@latest`。公式チャネルは npm）
 - 対象プロジェクトに `openspec/` が導入済みであること。未導入の場合、対話中はユーザーに init するか質問し、自走中は停止するか、自明な単一レイヤー変更に限り軽量フォールバック（設計を PR description に直書き）に切り替えます。ユーザーの確認なしに `openspec init` は実行しません
 - `gh` 認証
+- Stack 配送を使う場合は [gh-stack](https://github.com/github/gh-stack) 拡張（`gh extension install github/gh-stack`）と gh-stack スキル（非対話実行の Agent rules と exit code 表の参照先）、repository での GitHub Stacked PRs の有効化。Stack が使えない場合も、gh-stack が作成済みの連鎖 base の通常 PR をそのまま使う fallback で同じ配送単位を維持します
 
 ## OpenSpec との役割分担
 
 | 担当 | 内容 |
 |---|---|
 | OpenSpec | 成果物の形式（proposal.md / delta spec / design.md / tasks.md）、進捗の外部記録、仕様の永続化（`specs/`）、archive |
-| 本スキル | worktree 管理、反証ゲート（falsify スキル）、apply の駆動、PR 作成、レビューループ、収束判定、APPROVED / HANDOFF |
+| 本スキル | worktree 管理、反証ゲート（falsify スキル）、配送単位の決定、apply の駆動、PR 作成、レビューループ、収束判定、APPROVED / HANDOFF |
 
 apply の意味論（`openspec instructions apply --json` の contextFiles を読み、tasks.md を上から消化してチェックを入れる）は本スキルが定義し、OpenSpec のスラッシュコマンド実体には依存しません。
+
+## 配送単位
+
+単一の intent を持つ issue では「1 Issue = 1 OpenSpec change = 1 proposal」を原則とし、複数の依存 PR が必要でも change を分割しません。配送形態は propose 完了時に main が選びます。
+
+- **単一 PR（既定）**：change の全成果物と実装を 1 つの PR で出します
+- **Stack**：独立してレビューできる縦切りの実装 PR に分ける価値がある場合のみ。PR-proposal（proposal / delta spec / design / tasks）を最下段、実装 PR（PR-1 .. PR-N、それぞれが tasks の subset に trace）を中段、PR-archive（specs/ への同期と archive）を最上段とする GitHub Stack を組みます。PR-archive は全実装の収束（G1〜G4 成立）後にのみ作り、その HEAD で最終 full validation を行います。archive が実装より先に landing することはありません
+
+Stack が使えない repository では、base branch を直下の branch に連鎖させた通常 PR で同じ構成を維持します。
 
 ## エージェント間の時系列
 
@@ -35,8 +45,8 @@ sequenceDiagram
     Main->>GH: gh issue view（1回だけ）
     Main->>Main: 事前チェック<br/>（openspec 導入判定 / base branch 確認）
     Main->>Main: worktree + branch 作成
-    Main->>Main: worktree 内で merge済み・未archive の change を回収<br/>（openspec archive --yes → 最初の commit に含める）
     Main->>Main: worktree 内で propose<br/>（4点セット作成 → 最初の commit）
+    Main->>Main: 配送単位を決定<br/>（単一 PR / Stack。理由を proposal.md に記録）
 
     alt 高リスク（safety / security / migration /<br/>cross-layer / 複数 consumer / DB hot path）
         Main->>Fal: proposal + delta spec + repo（読み取り専用）
@@ -48,56 +58,59 @@ sequenceDiagram
         end
     end
 
-    alt 小〜中規模
-        Main->>Main: 実装（tasks.md を上から消化・チェック・commit）
-    else 長大な実装
-        Main->>Wkr: 濃い brief + tasks.md の場所
-        Wkr-->>Main: 完了報告（Scenario ごとのテスト名 + SHA）
+    opt Stack 配送
+        Main->>GH: PR-proposal を最下段として作成<br/>（反証ゲート通過後・実装開始前。<br/>gh stack submit --auto → gh pr edit）
     end
 
-    Main->>GH: push + PR 作成（delta spec も同じ PR に）
-
-    Main->>Rev: PR + Scenario 一覧 + 検証結果<br/>（アンカー = Scenario ∪ 非退行 invariant）
-    Rev-->>Main: review_result（must-fix / should / nit）
-    Main->>Main: 裁定（design defect / 今回必須 / follow-up / 過剰）
-    Main->>GH: 妥当な指摘だけ PR コメント投稿
-
-    loop 収束している間（must-fix が減り続ける間）
-        alt 長大な修正
-            Main->>Wkr: 修正 brief（1 fresh worker / 裁定者と分離）
-            Wkr-->>Main: 修正報告 + 再検証
-        else 小さな修正
-            Main->>Main: 裁定済み修正を直接反映 + 再検証
+    loop 実装単位ごと（単一 PR は 1 回）
+        alt 小〜中規模
+            Main->>Main: 実装（担当 tasks を消化・チェック・commit）
+        else 長大な実装
+            Main->>Wkr: 濃い brief + 担当 layer（branch / tasks subset）
+            Wkr-->>Main: 完了報告（Scenario ごとのテスト名 + SHA）
         end
-        Main->>Rev: 差分だけ再レビュー依頼
-        Rev-->>Main: CLOSED / PARTIAL / NEW
+        Main->>GH: push + PR 作成（Stack は上段へ積む）
+        Main->>Rev: PR + 担当 Scenario + 検証記録<br/>（アンカー = Scenario ∪ 非退行 invariant）
+        Rev-->>Main: review_result（must-fix / should / nit）
+        Main->>Main: 裁定（design defect / 今回必須 / follow-up / 過剰）
+        loop 収束している間（must-fix が減り続ける間）
+            Main->>Main: 修正（下段 layer なら該当 branch へ置き<br/>rebase --upstack で追随）+ 再検証
+            Main->>Rev: 差分だけ再レビュー依頼
+            Rev-->>Main: CLOSED / PARTIAL / NEW
+        end
     end
 
-    alt must-fix ゼロ
+    opt Stack 配送
+        Main->>Rev: Stack 全体で最終 1 pass<br/>（layer 間 interface の確認）
+        Rev-->>Main: review_result
+        Main->>GH: G1〜G4 成立後、PR-archive を最上段へ追加
+        Main->>Main: 最上段 HEAD で最終 full validation（G5）
+    end
+
+    alt must-fix ゼロ（G1〜G5 成立）
         Main->>GH: 最終コメント「APPROVED」
     else 収束停滞 / 人間専権
-        Main->>GH: 最終コメント「HANDOFF」（残指摘つき / archive しない）
+        Main->>GH: 最終コメント「HANDOFF」（残指摘つき /<br/>PR-archive は作らない。作成済みなら close して Stack から外す）
     end
 
-    Main-->>User: 最終報告（PR URL / 指摘内訳 / 残事項）
-    User->>GH: merge（人間の専権）
-
-    Note over Main,GH: 後日: 次回 run が worktree 内で<br/>merge 済み change を archive し specs/ を現在形に更新
+    Main-->>User: 最終報告（PR URL / 指摘内訳 / 残事項 /<br/>Stack は merge コマンドを明記）
+    User->>GH: merge（人間の専権。Stack は gh stack merge --yes で<br/>下段から一括 landing。gh pr merge は不可）
 ```
 
 ## 設計の要点
 
-- **main がリード役**：文脈を全部持つ main が propose、実装、裁定、収束判定を自分で行い、clean context の隔離は敵対的役割（falsifier / reviewer）に限定します。worker は長大な実装とレビュー修正ラウンド（裁定者と修正者の分離）でのみ fresh spawn し、レビュー修正は原則として 1 round につき 1 worker にまとめます
+- **main がリード役**：文脈を全部持つ main が propose、配送単位の決定、実装、裁定、収束判定を自分で行い、clean context の隔離は敵対的役割（falsifier / reviewer）に限定します。worker は長大な実装とレビュー修正ラウンド（裁定者と修正者の分離）でのみ fresh spawn し、レビュー修正は原則として 1 round につき 1 worker にまとめます
+- **配送単位の一貫性**：1 issue の intent は 1 change として propose し、分割は PR（配送）の層で行います。Stack の変異操作（init / add / checkout / push / submit / rebase / sync / unstack）は main 専権で、worker は担当 layer の外を触らず main へエスカレーションします
 - **正本の二層定義**：契約の正本は issue の受け入れ条件、実行時の検証単位は delta spec の Scenario。食い違いは停止して質問します
 - **意図アンカー**：指摘の紐付け先は「delta spec の Requirement/Scenario ∪ 暗黙の非退行 invariant」。既存で未変更の欠陥は must-fix にせず follow-up 提案に分類します
 - **最小充足と発見事項**：提案は受け入れ条件を満たす最小のものを既定とし、拡張は反証・レビュー・検証が実際に失敗を示した場合にのみ行います。実装中に見つけた紐付かない欠陥や改善点は修正せず、発見事項として列挙し follow-up に回します
-- **収束性による停止**：round ごとの未解消 must-fix 数が減っている限り続行し、停滞したら HANDOFF します。round 数上限や時間では打ち切りません
+- **収束性による停止**：round ごとの未解消 must-fix 数（Stack では全 PR の合算）が減っている限り続行し、停滞したら HANDOFF します。round 数上限や時間では打ち切りません
 - **実行環境別のモデル割当**：main はセッションのモデル、subagent は実行環境（Claude のみ / GPT のみ / クロスモデル）ごとの割当表に従います。高リスク対象への falsifier / reviewer は main が spawn 前に 1 段上のモデルへ昇格します。割当表は SKILL.md の「モデル割当」を正とします
-- **archive は merge 後**：この run の change は run 内で archive せず、次回 run が worktree 内で merge 済み change（tasks 全完了、または対応 PR が merged のもののみ）を `openspec archive --yes` で回収し、archive 差分を最初の commit に含めて PR で確認できるようにします
+- **archive は実装の後**：Stack では PR-archive が Stack 最上段として archive を担い、単一 PR や partial merge・merge queue の残りは次回 run または手動が、feature PR に混ぜない独立の回収 PR（`chore:`。レビューループと G ゲートの対象外）で archive します。いずれも archive の landing が実装より先行しません
 
 ## ファイル
 
-- `SKILL.md`：スキル本体。目的と非目標、事前チェックと OpenSpec 3 分岐、エージェント構成、進め方、終了条件（G1〜G5 / HANDOFF / 安全束縛）、不変条件を定義します。
+- `SKILL.md`：スキル本体。目的と非目標、事前チェックと OpenSpec 3 分岐、配送単位（単一 PR / Stack / fallback）、エージェント構成、進め方、終了条件（G1〜G5 / HANDOFF / 安全束縛）、不変条件を定義します。
 - `scripts/validation-lease.sh`：heavy validation をマシン全体で 1 本に直列化する flock ベースの lease スクリプトです。
 - `agents/openai.yaml`：UI メタ情報です。
 
