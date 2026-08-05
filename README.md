@@ -173,7 +173,7 @@ make unlink-project PROJECT=~/dev/App/OneNavi
 
 ## 管理中のスキル
 
-開発パイプラインは [OpenSpec](https://github.com/Fission-AI/OpenSpec) を土台にします（使い方は [docs/openspec-guide.md](docs/openspec-guide.md) を参照）。設計の構造（proposal / delta spec / design / tasks）と仕様の永続化は各プロジェクトに導入した OpenSpec が担い、本リポジトリのスキルはその周辺を受け持ちます。流れは、dig（設計前の対話反証）→ OpenSpec の propose（設計）→ falsify（設計後の独立反証）→ issue-pr-autopilot（propose→apply を駆動する配送シェル）です。falsify と issue-pr-autopilot は依存関係にあるため、1 つの bundle として `make link` で一括配布します。issue-pr-autopilot は falsify を参照するため、単体配布はサポートしません。
+開発パイプラインは [OpenSpec](https://github.com/Fission-AI/OpenSpec) を土台にします（使い方は [docs/openspec-guide.md](docs/openspec-guide.md) を参照）。設計の構造（proposal / delta spec / design / tasks）と仕様の永続化は各プロジェクトに導入した OpenSpec が担い、本リポジトリのスキルはその周辺を受け持ちます。流れは、dig（設計前の対話反証）→ OpenSpec の propose（設計）→ falsify（設計後の独立反証）→ issue-pr-autopilot（propose→apply を駆動する配送シェル）です。falsify と issue-pr-autopilot は依存関係にあるため、1 つの bundle として `make link` で一括配布します。issue-pr-autopilot は falsify を参照するため、単体配布はサポートしません。issue-pr-autopilot と falsify は、本リポジトリ管理外の外部スキル（gh-stack、ponytail / ponytail-review）を optional な前提として参照し、読めない環境では該当機能（Stack 配送、コード形状の規範と簡潔性 finding）を不適用にして動作します。
 
 - [dig](skills/dig/README.md)：プランの暗黙の前提と未検討リスクを、構造化質問の反復インタビューで掘り起こすためのスキル。Decisions は設計（OpenSpec の propose や issue-pr-autopilot）が要件、事実、仮定として引き継ぎます。
 - [falsify](skills/falsify/README.md)：設計や提案を書いた本人以外の clean context が反証する独立反証スキル。反証 5 ベクトル、blocking の処置、帰属タグ、価値判断をユーザーに確定させる質問作法を定めます。

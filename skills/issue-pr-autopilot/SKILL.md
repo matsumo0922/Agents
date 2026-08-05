@@ -77,23 +77,14 @@ GitHub Stacked PRs は repository ごとの有効化が必要で、無効な rep
 
 ## コード形状の規範（ladder）
 
-スコープの最小充足（提案・tasks・検証の範囲）とは別に、書くコードの形状にも最小充足を適用する。コードを書く前に次の ladder を上から確認し、最初に成立した段で止まる。
+スコープの最小充足（提案・tasks・検証の範囲）とは別に、書くコードの形状にも最小充足を適用する。この規範の正本は ponytail スキル（falsify / gh-stack と同様の前提スキル）とし、ladder（7 段：不要なら書かない → 既存の再利用 → stdlib → platform native → 導入済み依存 → 1 行 → 最小実装）、根本原因規範、頼まれていない抽象の禁止、`ponytail:` コメント規則、簡略化の対象外（trust boundary の入力検証、データ損失を防ぐエラー処理、security 対策）の定義はすべて ponytail SKILL.md に従う。main は run 開始時に ponytail SKILL.md を読み、worker / reviewer / falsifier の brief へ規範を展開する（clean context の subagent は brief に無い規範を実行できないため）。
 
-1. そもそも不要（投機的な必要性）→ 書かず、その旨を 1 行残す
-2. この codebase に既にある helper / util / 型 / パターン → 再利用する
-3. 標準ライブラリにある → 使う
-4. プラットフォームのネイティブ機能で足りる → 使う（DB 制約、CSS、組み込み UI 等）
-5. 導入済みの依存で足りる → 使う。数行で書けるものに新しい依存を足さない
-6. 1 行で書ける → 1 行で書く
-7. それでも書くなら、動く最小のコード
+本スキル固有の接続規則は次の 2 点。
 
-バグ修正は症状でなく根本原因を直す。触る関数の呼び出し元をすべて grep し、全呼び出し元が通る共有箇所への 1 つの修正を、報告された経路だけへのパッチより優先する（それが最小の diff でもある）。
+- `ponytail:` コメントを残した決定は帰属タグの（agent 仮決め）として扱い、PR の「人間に確認してほしいこと」へ転記する。ただし簡略化が safety / security / 不可逆 migration / permission 境界に触れる場合は（高リスク・要人間確認）とし、reviewer の必須反証対象にする
+- ponytail スキルが読めない環境では、この規範と reviewer の簡潔性 finding を不適用とし、その旨を最終報告に明記する（他の工程は通常どおり進める）。ただし前項の `ponytail:` コメントと帰属タグの接続は本スキル固有の規則であり、fallback 時も維持する（既存コードの `ponytail:` コメントに触れる変更では高リスク分岐を含めて適用する）
 
-頼まれていない抽象を作らない：実装が 1 つの interface、生成物が 1 つの factory、変わらない値の config、将来のための scaffolding。削除は追加に優先し、退屈な実装は賢い実装に優先する。ladder は解決策を短くするためのもので、問題の理解を短くするためのものではない。変更が触るコードと実際のフローを読み終えてから登る。
-
-意図的に角を切った箇所（グローバルロック、O(n²) 走査、素朴なヒューリスティック等、既知の上限がある簡略化）には `ponytail:` コメントで上限と upgrade path を残す（例：`// ponytail: global lock, per-account locks if throughput matters`）。`ponytail:` コメントを残した決定は帰属タグの（agent 仮決め）として扱い、PR の「人間に確認してほしいこと」へ転記する。ただし簡略化が safety / security / 不可逆 migration / permission 境界に触れる場合は（高リスク・要人間確認）とし、reviewer の必須反証対象にする。
-
-簡略化の対象外（削ってはならないもの）：trust boundary の入力検証、データ損失を防ぐエラー処理、security 対策、受け入れ条件が明示的に要求するもの。
+ponytail の「Ship the lazy version and question it in the same response」は本スキルの解釈割れの規則（lazy 版で前進 + 同一報告に質問）として採用済みであり、ponytail の Output 規則（説明 3 行まで）はコード生成の局面に限り適用する。proposal.md / PR description / 最終報告の分量は本スキルの規約が優先する。
 
 ## エージェント構成
 
@@ -147,7 +138,7 @@ Stack 配送では、実装開始前に PR-proposal を最下段として作る�
 
 apply の意味論は本スキルが定義する（OpenSpec のスラッシュコマンド実体に依存せず、CLI と change 名だけで完結させる）。`openspec instructions apply --change <name> --json` が返す contextFiles をすべて読み、tasks.md を上から消化して `- [x]` を付け、意味のある粒度で commit する。実装中に設計の欠陥が判明したら artifacts を更新してから続ける。Stack では、各実装 PR の担当 subset を担当 branch 上で消化する。
 
-- main が実装するのが既定。長大な実装は fresh worker に委任する。brief には目的、受け入れ条件、scope、non-goal、参照先（パス / SHA / URL）、許可された変更、禁止された変更、完了条件、検証責任、返却形式、コード形状の規範（ladder の全文と `ponytail:` コメント規則）を最初からまとめて渡す。Stack では担当 layer（branch 名と tasks subset）を brief に含め、worker は `gh stack` 操作を行わず、下層の修正が必要になったら自分で直さずに main へエスカレーションする
+- main が実装するのが既定。長大な実装は fresh worker に委任する。brief には目的、受け入れ条件、scope、non-goal、参照先（パス / SHA / URL）、許可された変更、禁止された変更、完了条件、検証責任、返却形式、コード形状の規範（ponytail SKILL.md から展開した ladder と `ponytail:` コメント規則）を最初からまとめて渡す。Stack では担当 layer（branch 名と tasks subset）を brief に含め、worker は `gh stack` 操作を行わず、下層の修正が必要になったら自分で直さずに main へエスカレーションする
 - **発見事項**：実装中に見つけた、受け入れ条件にも設計決定にも紐付かない欠陥や改善点は修正せず、完了報告に列挙だけする（worker が委任先の場合は worker が main へ返す）。main は follow-up 提案として issue にコメントするか PR の残事項に記録する。tasks.md に無い作業を発見を理由に追加しない
 - **検証 tier**：初回実装 = full（test / lint / build）、レビュー修正 = compile + 修正対象の targeted tests、承認前の最終 HEAD = full を 1 回。Stack では「初回実装 = full」を実装 PR ごとに適用し、upstack rebase 後は修正した layer の targeted tests + Stack 最上段での full 1 回とする（中間 layer ごとの full を繰り返さない）。最終 full を見込みで先行実行しない。明示された tier 以外に、安心のためだけの再実行、自己 review、追加 reviewer を足さない。追加検証は、失敗、未確認事項、具体的な risk が新たに見つかった場合だけ行う
 - **検証記録**：コマンド、結果、実行時 HEAD SHA（Stack では branch 名も）、scope を残す。PR 作成後は PR description の検証セクションを正とし、PR 作成前は worktree 内の一時ノートに残して所在を reviewer への brief に含める。Scenario ごとの証明はテスト名 + SHA で示す。rebase で SHA が変わった layer のうち tier 規則で再検証した layer は再検証後の SHA で記録を更新し、rebase のみで再検証していない layer は「rebase のみ・元の検証 SHA」を記録に明示する（新 SHA へ機械的に書き換えて検証済みに見せない。Stack 最上段の full 1 回が rebase 後の全体を最終的に担保する）
@@ -167,12 +158,12 @@ push して PR を作る。単一 PR では delta spec も同じ PR に含める
 
 ### 6. レビューループ
 
-reviewer（clean context）に PR、Scenario 一覧、検証記録を渡す。brief には簡潔性 finding の規範（5 タグの定義、アンカー例外、severity 上限、対象外ガード）を全文で含める（reviewer は clean context のため、brief に無い規範は実行されない）。
+reviewer（clean context）に PR、Scenario 一覧、検証記録を渡す。brief には簡潔性 finding の規範（ponytail-review SKILL.md から展開した 5 タグの定義と、本スキルのアンカー例外・severity 上限・対象外ガード）を含める（reviewer は clean context のため、brief に無い規範は実行されない）。
 
 - **レビュー cadence**：単一 PR では PR 全体に 1 pass。Stack では実装 PR ごとに担当 subset をアンカーにした 1 pass を行い、全実装 PR の収束後に Stack 全体で最終 1 pass を行う（layer 間 interface の齟齬は単一 layer の diff に現れないため。最終 pass のアンカーは change 全体の Scenario ∪ 非退行 invariant）。PR ごとの pass を理由なく反復しない。最終 pass で NEW が出たら通常の修正ラウンドと同様に扱う：main が裁定し、修正を該当 layer の branch へ置いて upstack rebase + tier 規則の再検証を行い、最終 pass を再実行する（実装 PR ごとの pass へは戻らない）。最終 pass の反復も収束判定（must-fix 数の減少）に従う
 - **意図アンカー**：各指摘は「delta spec の Requirement/Scenario ∪ 暗黙の非退行 invariant（変更が既存の正しい挙動を壊さない）」のどれを守るための指摘かに紐付く。今回の diff が導入または悪化させた correctness / security / safety / 互換性の regression は非退行 invariant にアンカーできる。既存で未変更の欠陥はアンカー不可で、must-fix でなく follow-up 提案として報告する（報告自体は妨げない）
 - **finding の列挙**：今回の diff が導入または悪化させた、根拠を示せる finding は severity で事前に間引かず列挙する。各 finding には再現条件、影響、根拠箇所、意図アンカーを付ける。severity と今回対応すべきかは main が別工程で裁定する
-- **簡潔性 finding**：今回の diff が導入した不要な複雑さを、5 タグ（delete = 不要な機能・dead code / stdlib = 標準ライブラリの再発明 / native = プラットフォーム機能で足りる / yagni = 実装 1 つの抽象・使われない柔軟性 / shrink = 同じロジックをより短く）+ 位置 + 置き換え先の 1 行形式で列挙する。簡潔性 finding は意図アンカー不要の例外とし、severity の上限は should（must-fix に昇格しない）。裁定の既定は「今回必須」ではなく次のとおりとする：削除・置換が diff 内で完結し検証記録を壊さないものは今回対応してよく、それ以外は follow-up に落とす（簡潔性を理由に収束ループを延長しない）。最小チェック（assert self-check・最小のテスト）は G2 への使用の有無にかかわらず削除提案の対象外とし、`ponytail:` コメントで明示された意図的簡略化も対象外とする。簡潔性 finding のために追加の reviewer pass を spawn しない
+- **簡潔性 finding**：今回の diff が導入した不要な複雑さを、5 タグ（delete / stdlib / native / yagni / shrink。定義の正本は ponytail-review スキル）+ 位置 + 置き換え先の 1 行形式で列挙する。簡潔性 finding は意図アンカー不要の例外とし、severity の上限は should（must-fix に昇格しない）。裁定の既定は「今回必須」ではなく次のとおりとする：削除・置換が diff 内で完結し検証記録を壊さないものは今回対応してよく、それ以外は follow-up に落とす（簡潔性を理由に収束ループを延長しない）。最小チェック（assert self-check・最小のテスト）は G2 への使用の有無にかかわらず削除提案の対象外とし、`ponytail:` コメントで明示された意図的簡略化も対象外とする。簡潔性 finding のために追加の reviewer pass を spawn しない
 - **信頼チェーン**：reviewer は build / test / lint を再実行せず、検証記録を信頼してコードだけをレビューする。ただし開始前に「検証記録の最終 SHA == 現在の HEAD（Stack ではレビュー対象 branch の HEAD）」を read-only で照合し、不一致または scope 不足ならレビューせず差し戻す。「rebase のみ・元の検証 SHA」と明示された layer は、元の検証 SHA からの差分が rebase による base の移動だけであることを確認できれば受理してよい
 - **severity**：must-fix = 受け入れ条件違反、または発生条件を特定できる証明可能な欠陥（データ破壊、race、security、互換性、設計欠陥）。should = 品質や保守性への実害。nit = 好みで、既定処置は「対応不要（記録のみ）」
 - **有限 inventory**：must-fix を 1 件見つけたら問題クラスとして一般化し、同根のインスタンスを grep / call graph で列挙して ID を振った inventory として 1 グループで報告する。各 ID に修正を証明する観測（テスト名 / コマンド）を閉じる条件として付け、「全〜」「〜など」の開いた表現を認めない
