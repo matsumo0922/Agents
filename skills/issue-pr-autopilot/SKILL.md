@@ -148,9 +148,10 @@ apply の意味論は本スキルが定義する（OpenSpec のスラッシュ�
 
 heavy validation（Gradle 系、docker build、Testcontainers、使い捨て DB、selftest 類）は同梱の `scripts/validation-lease.sh` で包み、同一マシンで同時 1 本に直列化する。lock 待ち時間は external wait として検証記録に残す。
 
-- JVM 系は worktree ごとに `GRADLE_USER_HOME` を分離する
+- Gradle user home は実行環境の既存設定を使い、worktree ごとには分離しない
 - 同一 worktree で検証コマンドを並列実行しない。検証は 1 回の呼び出しにまとめる（Gradle は 1 コマンドに複数タスク）
-- マシン共有状態に触る復旧操作（共有 daemon の停止、`docker system prune`、プロセス一括 kill）を実装エージェントが独断で行わない。自分の隔離資源内で完結しない復旧は main へエスカレーションする
+- `gradle --stop` / `./gradlew --stop` はグローバル Agent Rules に従い、worker は実行しない。daemon が原因である具体的な証拠と他の Gradle 実行への影響を main へ報告する
+- その他のマシン共有状態に触る復旧操作（`docker system prune`、プロセス一括 kill）も実装エージェントが独断で行わない。自分の隔離資源内で完結しない復旧は main へエスカレーションする
 
 ### 5. PR 作成
 
