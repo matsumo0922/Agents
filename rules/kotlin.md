@@ -87,8 +87,10 @@ internal fun RecipeDetailTopAppBar(...)
 
 ### レイアウト
 
+- 特に指示がなくかつ利用可能な場合は、material3 component を積極的に用い、material2 を混ぜない
 - `Column` / `Row` の子要素間の間隔は `Arrangement.spacedBy` と各要素の `Modifier.padding` で調整する。固定サイズの `Spacer`（`Spacer(Modifier.width(8.dp))` など）は間隔調整に使わない
 - `Spacer(Modifier.weight(1f))` のような比率ベースの `Spacer` は使ってよい
+- `dp` や `sp` などのレイアウト固有の数値は別途定数には切り出さず、値を直接使う
 
 ### 呼び出し
 
