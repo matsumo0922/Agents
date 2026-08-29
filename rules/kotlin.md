@@ -32,9 +32,13 @@ Kotlin プロジェクト共通のコーディング規約。整形など静的�
 ### 定数
 
 - 参照箇所が1〜2箇所しかない値は定数へ切り出さず、使用箇所へ直接書く。比率、角度、書式文字列、log tag のいずれも対象とする
+- 参照箇所は「宣言を除いた、コード本体からの参照」で数える。KDoc の `[Xxx]` 参照は数に含めない
 - 定数名は参照箇所から値を隠す。`side * BadgeSizeRatio` は宣言まで辿らないと `0.3f` だと分からず、読む手間だけが増える
 - 値に理由が要る場合は、定数の KDoc ではなく使用箇所のコメントとして書く
-- 例外は、複数の分岐で比較対象になる sentinel（`if (text == UnavailableText)` のような値）。リテラルを散らすと、値を変えたときに片方だけ直す事故になる
+- 次のものは参照が1箇所でも定数のまま残す。インライン化すると意味が変わる
+  - 複数の分岐で比較対象になる sentinel（`if (text == UnavailableText)` のような値）。リテラルを散らすと、値を変えたときに片方だけ直す事故になる
+  - `remember` の key として同一性が比較される値。呼び出しごとに新しい instance を作ると key が毎回変わり、再計算が走る
+  - `Paint` のように、生成を避けて process 内で共有している instance
 
 ### 段落
 
@@ -62,7 +66,8 @@ fun purchase(item: Item): Result<Receipt> {
 ### 引数
 
 - 関数定義は引数2つまでなら1行で書く。デフォルト引数を含む場合は引数ごとに改行する
-- 関数呼び出しは引数2つまでなら名前付き引数なしで1行で書く。次のいずれかに該当する場合は、引数ごとに改行して名前付き引数を使う: 引数が3つ以上 / 同じ型・形の引数が連続する / 引数内にメソッドチェーン・匿名オブジェクト・計算式が入る
+- 関数呼び出しは引数2つまでなら名前付き引数なしで1行で書く。次のいずれかに該当する場合は、引数ごとに改行して名前付き引数を使う: 引数が3つ以上 / 同じ型・形の引数が連続する / 引数内にメソッドチェーン・匿名オブジェクト・計算式・関数呼び出しが入る
+- 行の長さは基準にしない。`Text(stringResource(R.string.ok))` は短くても、引数内で関数を呼んでいるため改行する
 - Java メソッドは名前付き引数を使えないため、maxLength 制限に当たらない限り、改行せず1行で呼び出す
 
 ### テスト
@@ -109,6 +114,9 @@ internal fun RecipeDetailTopAppBar(...)
 ### レイアウト
 
 - Composable を定義する際は必ず引数に Modifier を定義し、デフォルト引数として `Modifier` を渡すこと。なお、デフォルト引数を持つ引数が複数ある場合はその中で一番最初に定義すること
+- `@Preview` を付けた Composable は対象外とする。呼び出し元が preview host だけであり、Modifier を渡す経路がない
+- Dialog も対象とする。material3 の Dialog は Modifier を受け取るため、渡す先がある
+- 内部で Modifier のチェインを組み立てる場合は、受け取った Modifier を起点にする。`Modifier.size(x)` と書くと引数が無視され、外部からの指定が効かない
 - size やマージンとして使われる padding などは外部から Modifier を通じて指定するべきであり、特段の事情がない限り内部でサイズや padding を固定化しない
 - Composable 自体を if で描画しない時などは内部で `if (!isVisible) return` のように早期リターンするのではなく、その Composable の呼び出し下で分岐する
 - 特に指示がなくかつ利用可能な場合は、material3 component を積極的に用い、material2 を混ぜない
@@ -116,9 +124,21 @@ internal fun RecipeDetailTopAppBar(...)
 - `Spacer(Modifier.weight(1f))` のような比率ベースの `Spacer` は使ってよい
 - `dp` や `sp`、比率などのレイアウト固有の数値は別途定数には切り出さず、値を直接使う
 
+```kotlin
+@Composable
+private fun Badge(
+    side: Dp,
+    modifier: Modifier = Modifier,
+) {
+    // 起点を modifier にする。Modifier.size(side) と書くと引数が捨てられる
+    Box(modifier = modifier.size(side))
+}
+```
+
 ### 呼び出し
 
 - Composable の呼び出しは名前付き引数を使い、引数ごとに必ず改行する。
+- 例外は、引数が1つでその値が識別子1つの場合（`IconButton(onDelete)`）。名前付きにも改行にもしない
 - `modifier` 引数は呼び出し時の引数の先頭に置く
 - `Modifier` のチェインが2リンク以上になる場合は、リンクごとに改行する
 
