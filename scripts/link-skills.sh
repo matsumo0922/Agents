@@ -141,6 +141,9 @@ legacy_skill() {
 
   [ -L "$legacy_path" ] || return 0
   [ "$(readlink "$legacy_path")" = "$skill_path" ] || return 0
+  # 旧配布先が新配布先と同じ実体（ディレクトリ symlink）なら、旧パスは新しいリンクそのもの。
+  [ "$(CDPATH= cd -- "$LEGACY_CODEX_SKILLS_DIR" 2>/dev/null && pwd -P)" != \
+    "$(CDPATH= cd -- "$(target_dir codex)" 2>/dev/null && pwd -P)" ] || return 0
 
   case "$ACTION" in
     link|unlink)
