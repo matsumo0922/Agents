@@ -8,13 +8,6 @@ SKILLS_ROOT="$REPO_ROOT/skills"
 BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.agents-repo-backups}"
 TIMESTAMP="$(date +%Y%m%d%H%M%S)"
 
-# issue-pr-autopilot / falsify が optional な前提として参照する、本リポジトリ管理外のスキル。
-# 見つからなくても link は成功させ、警告だけを表示する（各スキルは不在時の fallback を定義済み）。
-# 存在チェックは agent 固有の skills ディレクトリに加え、agent が共通で探索する
-# ~/.agents/skills も対象にする（Codex は ~/.agents 配下のスキルも認識するため）。
-EXTERNAL_SKILLS="gh-stack ponytail ponytail-review"
-SHARED_SKILLS_DIR="$HOME/.agents/skills"
-
 usage() {
   cat <<'EOF'
 Usage:
@@ -160,29 +153,6 @@ if [ ! -d "$SKILLS_ROOT" ]; then
   exit 1
 fi
 
-check_external_skill() {
-  agent_name="$1"
-  skill_name="$2"
-  destination_path="$(target_dir "$agent_name")/$skill_name"
-
-  if [ -f "$destination_path/SKILL.md" ]; then
-    printf 'external ok %s/%s\n' "$agent_name" "$skill_name"
-  elif [ -f "$SHARED_SKILLS_DIR/$skill_name/SKILL.md" ]; then
-    printf 'external ok %s/%s (via %s)\n' "$agent_name" "$skill_name" "$SHARED_SKILLS_DIR"
-  else
-    printf 'external missing %s/%s: install it into %s or %s (autopilot falls back without it)\n' \
-      "$agent_name" "$skill_name" "$(target_dir "$agent_name")" "$SHARED_SKILLS_DIR" >&2
-  fi
-}
-
-check_external_skills() {
-  for skill_name in $EXTERNAL_SKILLS; do
-    for agent_name in $TARGETS; do
-      check_external_skill "$agent_name" "$skill_name"
-    done
-  done
-}
-
 for skill_path in "$SKILLS_ROOT"/*; do
   [ -d "$skill_path" ] || continue
   [ -f "$skill_path/SKILL.md" ] || continue
@@ -191,9 +161,3 @@ for skill_path in "$SKILLS_ROOT"/*; do
     run_for_skill "$agent_name" "$skill_path"
   done
 done
-
-case "$ACTION" in
-  link|status)
-    check_external_skills
-    ;;
-esac
