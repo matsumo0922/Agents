@@ -19,7 +19,7 @@ Claude Code / Codex 共通のグローバル指示。プロジェクト固有の
 
 ### 別の agent への相談
 
-- herdr の隣ペインなどで別の agent を起動して意見を求めるときは、相談役を書き込みできない権限で起動する（Codex は `-s read-only`、Claude Code は `--permission-mode plan`）。並行して実装させる場合は、`herdr worktree create` で作業場所を分ける。同じ checkout で編集と検証が混ざるのを防ぐため
+- herdr の隣ペインなどで別の agent を起動して意見を求めるときは、相談役をファイルを編集しない設定で起動する（Codex は sandbox の `-s read-only`、Claude Code は `--permission-mode plan`）。並行して実装させる場合は、`herdr worktree create` で作業場所を分ける。同じ checkout で編集と検証が混ざるのを防ぐため
 
 ### コマンド実行
 
