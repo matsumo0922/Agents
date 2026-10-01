@@ -40,7 +40,7 @@ CLAUDE.md
 
 - 回答・ドキュメントは日本語を基本にします。
 - Claude Code と Codex の両方から扱える内容として管理します。
-- スキルの配布は `~/.claude/skills` / `~/.codex/skills` への symlink で行います。
+- スキルの配布は `~/.claude/skills`（Claude Code）/ `~/.agents/skills`（Codex が探索する共通ディレクトリ）への symlink で行います。以前の配布先 `~/.codex/skills` に残るこのリポジトリ由来の symlink は、`make link` / `make unlink` が外します。
 - Codex 向け共通指示の配布は `~/.codex/AGENTS.md` への symlink で行います。
 - Claude Code 向け共通指示の配布は `~/.claude/CLAUDE.md` の wrapper 生成で行います。
 - 公開リポジトリなので、秘密情報・API key・認証情報・個人用 cache はコミットしません。

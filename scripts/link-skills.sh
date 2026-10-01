@@ -7,6 +7,9 @@ REPO_ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 SKILLS_ROOT="$REPO_ROOT/skills"
 BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.agents-repo-backups}"
 TIMESTAMP="$(date +%Y%m%d%H%M%S)"
+# Codex は ~/.agents/skills を探索する。以前の配布先 ~/.codex/skills に残る
+# このリポジトリ由来の symlink は、二重に読まれないよう link / unlink 時に外す。
+LEGACY_CODEX_SKILLS_DIR="$HOME/.codex/skills"
 
 usage() {
   cat <<'EOF'
@@ -42,7 +45,7 @@ target_dir() {
       printf '%s\n' "$HOME/.claude/skills"
       ;;
     codex)
-      printf '%s\n' "$HOME/.codex/skills"
+      printf '%s\n' "$HOME/.agents/skills"
       ;;
     *)
       printf 'Unsupported target: %s\n' "$agent_name" >&2
@@ -131,6 +134,28 @@ status_skill() {
   fi
 }
 
+legacy_skill() {
+  skill_path="$1"
+  skill_name="$(basename -- "$skill_path")"
+  legacy_path="$LEGACY_CODEX_SKILLS_DIR/$skill_name"
+
+  [ -L "$legacy_path" ] || return 0
+  [ "$(readlink "$legacy_path")" = "$skill_path" ] || return 0
+  # 旧配布先が新配布先と同じ実体（ディレクトリ symlink）なら、旧パスは新しいリンクそのもの。
+  [ "$(CDPATH= cd -- "$LEGACY_CODEX_SKILLS_DIR" 2>/dev/null && pwd -P)" != \
+    "$(CDPATH= cd -- "$(target_dir codex)" 2>/dev/null && pwd -P)" ] || return 0
+
+  case "$ACTION" in
+    link|unlink)
+      rm "$legacy_path"
+      printf 'removed legacy %s\n' "$legacy_path"
+      ;;
+    status)
+      printf 'legacy %s -> %s (run make link to remove)\n' "$legacy_path" "$skill_path"
+      ;;
+  esac
+}
+
 run_for_skill() {
   agent_name="$1"
   skill_path="$2"
@@ -146,6 +171,10 @@ run_for_skill() {
       status_skill "$agent_name" "$skill_path"
       ;;
   esac
+
+  if [ "$agent_name" = codex ]; then
+    legacy_skill "$skill_path"
+  fi
 }
 
 if [ ! -d "$SKILLS_ROOT" ]; then

@@ -14,7 +14,7 @@
 
 ## 配布
 
-リポジトリ root で以下を実行すると、`~/.claude/skills/cognitive-rhythm-writing` と `~/.codex/skills/cognitive-rhythm-writing` に symlink を作成できます。
+リポジトリ root で以下を実行すると、`~/.claude/skills/cognitive-rhythm-writing` と `~/.agents/skills/cognitive-rhythm-writing` に symlink を作成できます。
 
 ```bash
 make link
