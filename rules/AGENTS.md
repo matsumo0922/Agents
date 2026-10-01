@@ -20,7 +20,7 @@ Claude Code / Codex 共通のグローバル指示。プロジェクト固有の
 ### 別の agent への相談
 
 - 委任には実行環境の subagent を使う。ユーザーが subagent で扱えない agent を指定した場合に限り、herdr の隣ペインにその agent を起動して依頼する。この指定は herdr を使う依頼を兼ねる。herdr 上で起動されていない（`HERDR_ENV` が `1` でない）場合は、起動できないことをユーザーに伝える
-- 相談役は編集できない設定で起動する（Codex は `-s read-only`、Claude Code は `--disallowedTools "Edit Write NotebookEdit"`）。並行して実装させる場合は `herdr worktree create` で作業場所を分け、編集と検証が同じ checkout で混ざらないようにする
+- 相談役にはファイルを変更させない。Codex は sandbox の `-s read-only` で起動する。Claude Code は `--disallowedTools "Edit Write NotebookEdit"` で編集ツールを外して起動するが、Bash 経由の書き込みは防げないため、依頼文でも変更を禁じる。並行して実装させる場合は `herdr worktree create` で作業場所を分け、編集と検証が同じ checkout で混ざらないようにする
 
 ### コマンド実行
 
