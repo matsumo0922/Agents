@@ -20,10 +20,6 @@ Claude Code / Codex 共通のグローバル指示。プロジェクト固有の
 
 - `gradle --stop` / `./gradlew --stop` は、同じ Gradle version を使う別プロジェクト・worktree・IDE の daemon も停止し得るマシン共有状態への操作である。原因不明の build failure に対する一般的な復旧手段として実行しない。daemon が原因である具体的な証拠と、他の Gradle 実行への影響を確認し、ユーザーが明示的に許可した場合に限り実行する
 
-### Claude Code のサブエージェント
-
-- Agent tool で `gpt-medium` / `gpt-high` / `gpt-xhigh` を起動するときは、各インスタンスに一意な `name` を必ず指定する。`name` のない中間 agent がさらに teammate を起動すると、子に見える `teammate_id` が agent type のラベルになり、`SendMessage` の返信先として解決できないため
-
 ## ドキュメント
 
 - 実装や仕様変更を行ったら、同じ PR 内で影響するドキュメント（README / docs/ / KDoc）を更新する。後追いの docs 専用 PR を作らない

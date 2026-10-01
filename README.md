@@ -2,29 +2,15 @@
 
 Claude Code / Codex などの AI Agent で使うドキュメントやスキルを管理し、GitHub 経由で複数 PC から同じ内容を参照するためのリポジトリです。
 
-`skills/` 配下のスキルと `rules/` 配下の共通指示ファイル、`agents/` 配下の agent 定義を配布します。
+`skills/` 配下のスキルと `rules/` 配下の共通指示ファイルを配布します。
 
 ## 構成
 
 ```text
-agents/
-  gpt-medium.md
-  gpt-high.md
-  gpt-xhigh.md
 skills/
   dig/
     SKILL.md
     README.md
-    agents/openai.yaml
-  falsify/
-    SKILL.md
-    README.md
-    agents/openai.yaml
-  issue-pr-autopilot/
-    SKILL.md
-    README.md
-    scripts/
-      validation-lease.sh
     agents/openai.yaml
   japanese-tech-writing/
     SKILL.md
@@ -33,9 +19,7 @@ skills/
     SKILL.md
     README.md
 docs/
-  cliproxy-setup.md
   codex-local-setup.md
-  openspec-guide.md
 rules/
   AGENTS.md
   kotlin.md
@@ -46,7 +30,6 @@ rules/
 scripts/
   link-skills.sh
   link-rules.sh
-  link-agents.sh
   link-project-rules.sh
 Makefile
 AGENTS.md
@@ -60,7 +43,6 @@ CLAUDE.md
 - スキルの配布は `~/.claude/skills` / `~/.codex/skills` への symlink で行います。
 - Codex 向け共通指示の配布は `~/.codex/AGENTS.md` への symlink で行います。
 - Claude Code 向け共通指示の配布は `~/.claude/CLAUDE.md` の wrapper 生成で行います。
-- GPT worker agent 定義の配布は `~/.claude/agents/` への symlink で行います。配布先は Claude Code のみで、Codex には agent 定義の概念がないため配布しません。
 - 公開リポジトリなので、秘密情報・API key・認証情報・個人用 cache はコミットしません。
 - 全プロジェクト共通のルール本文は `rules/AGENTS.md` に集約します。エージェントの挙動・ドキュメント・メモリ・Git 運用のルールを置き、判断を伴わない整形規約は置きません。
 - Kotlin / Jetpack Compose プロジェクト向けの規約は `rules/kotlin.md` に置き、各プロジェクトの CLAUDE.md / AGENTS.md から参照して使います。静的解析で判定できる規約は `rules/lint/` のテンプレートを取り込んだ detekt / compose-rules 設定で強制します。
@@ -69,23 +51,19 @@ CLAUDE.md
 
 Codex の PC ごとの個人環境設定は [docs/codex-local-setup.md](docs/codex-local-setup.md) を参照します。
 
-Claude Code から OAuth サブスク枠経由で GPT 系・Claude 系モデルを使うための CLIProxyAPI のセットアップは [docs/cliproxy-setup.md](docs/cliproxy-setup.md) を参照します。
-
 リンク状態を確認します。
 
 ```bash
 make status
 ```
 
-スキルと共通指示ファイル、agent 定義を配布します。
+スキルと共通指示ファイルを配布します。
 
 ```bash
 make link
 ```
 
-`make link` と `make status`（skills 分）は、本リポジトリ管理外の外部前提スキル（gh-stack、ponytail / ponytail-review）が配布先に存在するかも確認します。存在判定は agent 固有の skills ディレクトリ（`~/.claude/skills` / `~/.codex/skills`）に加え、agent が共通で探索する `~/.agents/skills` も対象です。見つからない場合は `external missing` の警告を表示しますが、link 自体は成功します（各スキルは不在時の fallback を定義しています）。
-
-スキルと共通指示ファイルについて、Claude Code だけにリンクしたい場合は `TARGETS` を指定します（`link-agents` は配布先が Claude Code のみのため `TARGETS` を参照しません）。
+Claude Code だけにリンクしたい場合は `TARGETS` を指定します。
 
 ```bash
 TARGETS=claude make link
@@ -97,49 +75,16 @@ TARGETS=claude make link
 make unlink
 ```
 
-スキル・共通指示ファイル・agent 定義は個別にも操作できます。
+スキルと共通指示ファイルは個別にも操作できます。
 
 ```bash
 make status-skills
 make status-rules
-make status-agents
 make link-skills
 make link-rules
-make link-agents
 make unlink-skills
 make unlink-rules
-make unlink-agents
 ```
-
-### agent 定義（GPT worker）の運用
-
-`agents/` は CLIProxy 経由で GPT を Claude Code の subagent として使うための agent 定義（`model:` / `effort:` を持つ frontmatter）を置きます。`make link-agents` で `agents/*.md` を `~/.claude/agents/` へファイル単位の symlink として配布します。CLIProxyAPI 自体のセットアップと、この frontmatter 方式を採用した理由は [docs/cliproxy-setup.md](docs/cliproxy-setup.md) を参照してください。
-
-effort 別に使う agent ファイルを増減する場合は、`agents/` にファイルを追加または削除して `make link-agents` / `make unlink-agents` を再実行するだけです。スクリプトは `agents/*.md` を動的に走査するため、ファイル名やスクリプト自体の変更は不要です。
-
-Claude Code の Agent tool で main から GPT worker を起動するときは、各インスタンスに一意な `name` を指定します。`description` や agent type（`gpt-medium` / `gpt-high` / `gpt-xhigh`）は、`SendMessage` で解決できるインスタンス名の代わりにはなりません。中間の GPT worker に `name` がないと、子から見える `teammate_id` が agent type のラベルになり、返信先として解決できません。
-
-```text
-Agent(
-  subagent_type="gpt-xhigh",
-  name="fukurou-evidence-auditor",
-  description="本番障害の証拠を裏取り",
-  ...
-)
-```
-
-一意な `name` で起動された GPT worker は teammate になります。team roster は flat であり、teammate はさらに `name` 付き teammate を起動できません。GPT worker が多段委譲するときは、child Agent の `name` を省略し、`run_in_background: false` の同期 subagent として起動して、Agent の戻り値から結果を回収します。nested teammate、background agent、`SendMessage` の返信による結果回収は使用しません。
-
-### OpenSpec の導入
-
-issue-pr-autopilot は、対象プロジェクトに [OpenSpec](https://github.com/Fission-AI/OpenSpec) が導入されていることを前提とします。未導入のプロジェクトでは autopilot は停止するか、自明な単一レイヤー変更に限定したフォールバックで動作します。プロジェクトごとに次を実行して導入します。
-
-```bash
-npm install -g @fission-ai/openspec@latest
-openspec init --tools claude,codex
-```
-
-Homebrew にも formula がありますが upstream 非公式のため、公式チャネルの npm を使います。OpenSpec 自体の使い方は [docs/openspec-guide.md](docs/openspec-guide.md) を参照してください。
 
 ## Kotlin プロジェクトへの規約配布
 
@@ -165,7 +110,6 @@ make unlink-project PROJECT=~/dev/App/OneNavi
 - `unlink` はこのリポジトリを指している symlink と generated wrapper だけを削除します。
 - `scripts/link-skills.sh` は `skills/` 配下だけを配布対象にします。
 - `scripts/link-rules.sh` は `rules/AGENTS.md` を配布対象にします。
-- `scripts/link-agents.sh` は `agents/*.md` を配布対象にし、`~/.claude/agents/` へファイル単位で symlink します。
 - `scripts/link-project-rules.sh` の管理ブロックはプロジェクトのリポジトリにコミットされる前提です。他のコントリビューターや別 PC でも Agents リポジトリなしでそのまま機能します。
 - `unlink-project` は管理ブロックだけを削除します。`CLAUDE.md` と lint ファイルは残します。
 - `~/.claude/CLAUDE.md` は `rules/AGENTS.md` と `~/.claude/RTK.md` を参照する generated wrapper として作成します。
@@ -175,10 +119,6 @@ make unlink-project PROJECT=~/dev/App/OneNavi
 
 ## 管理中のスキル
 
-開発パイプラインは [OpenSpec](https://github.com/Fission-AI/OpenSpec) を土台にします（使い方は [docs/openspec-guide.md](docs/openspec-guide.md) を参照）。設計の構造（proposal / delta spec / design / tasks）と仕様の永続化は各プロジェクトに導入した OpenSpec が担い、本リポジトリのスキルはその周辺を受け持ちます。流れは、dig（設計前の対話反証）→ OpenSpec の propose（設計）→ falsify（設計後の独立反証）→ issue-pr-autopilot（propose→apply を駆動する配送シェル）です。falsify と issue-pr-autopilot は依存関係にあるため、1 つの bundle として `make link` で一括配布します。issue-pr-autopilot は falsify を参照するため、単体配布はサポートしません。issue-pr-autopilot と falsify は、本リポジトリ管理外の外部スキル（gh-stack、ponytail / ponytail-review）を optional な前提として参照し、読めない環境では該当機能（Stack 配送、コード形状の規範と簡潔性 finding）を不適用にして動作します。
-
-- [dig](skills/dig/README.md)：プランの暗黙の前提と未検討リスクを、構造化質問の反復インタビューで掘り起こすためのスキル。Decisions は設計（OpenSpec の propose や issue-pr-autopilot）が要件、事実、仮定として引き継ぎます。
-- [falsify](skills/falsify/README.md)：設計や提案を書いた本人以外の clean context が反証する独立反証スキル。反証 5 ベクトル、blocking の処置、帰属タグ、価値判断をユーザーに確定させる質問作法を定めます。
-- [issue-pr-autopilot](skills/issue-pr-autopilot/README.md)：issue や作業説明を起点に、OpenSpec の propose→apply を worktree 内で駆動し、反証ゲート、レビューループ、収束判定を経て PR 作成まで自走させる配送シェル。
+- [dig](skills/dig/README.md)：プランの暗黙の前提と未検討リスクを、構造化質問の反復インタビューで掘り起こすためのスキル。
 - [japanese-tech-writing](skills/japanese-tech-writing/README.md)：日本語の技術文書、書籍原稿、記事、解説文を執筆、推敲するための文章規範。
 - [cognitive-rhythm-writing](skills/cognitive-rhythm-writing/README.md)：説明的な文章に認知モードの切り替えと未回収の緊張を設計する文章規範。japanese-tech-writing を併用します。
