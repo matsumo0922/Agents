@@ -23,7 +23,7 @@
 
 ## リンク
 
-リポジトリ root で以下を実行すると、`~/.claude/skills/dig` と `~/.codex/skills/dig` に symlink を作成できます。
+リポジトリ root で以下を実行すると、`~/.claude/skills/dig` と `~/.agents/skills/dig` に symlink を作成できます。
 
 ```bash
 make link

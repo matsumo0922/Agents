@@ -12,7 +12,7 @@
 
 ## 配布
 
-リポジトリ root で以下を実行すると、`~/.claude/skills/japanese-tech-writing` と `~/.codex/skills/japanese-tech-writing` に symlink を作成できます。
+リポジトリ root で以下を実行すると、`~/.claude/skills/japanese-tech-writing` と `~/.agents/skills/japanese-tech-writing` に symlink を作成できます。
 
 ```bash
 make link
